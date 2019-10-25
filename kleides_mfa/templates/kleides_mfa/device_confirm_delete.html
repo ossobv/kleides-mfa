@@ -1,0 +1,16 @@
+{% extends "kleides_mfa/base.html" %}
+
+{% load crispy_forms_tags i18n %}
+
+{% block content %}
+<h1>{% blocktrans with name=plugin.name %}Delete {{ name }} authentication{% endblocktrans %}</h1>
+
+{% block form_description %}
+<p>{% blocktrans with plugin=plugin.name name=object.name %}Are you sure you want to delete {{ plugin }} "{{ name }}" from your authentication methods?{% endblocktrans %}</p>
+{% endblock form_description %}
+
+<form id="kleides-mfa-delete-form" action="" method="post" novalidate>{% csrf_token %}
+    <button class='btn btn-danger' type='submit'>{% trans 'Yes, I am sure' %}</button>
+    <a href="{% url 'kleides_mfa:index' %}" class='btn btn-secondary'>{% trans 'No, take me back' %}</a>
+</form>
+{% endblock content %}

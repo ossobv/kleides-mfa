@@ -1,0 +1,28 @@
+{% load i18n %}
+
+<h2>{{ plugin.name }}</h2>
+<table id="device-list" class="table table-striped">
+    <thead>
+        <tr>
+            <th scope="col">{% trans 'Name' %}</th>
+            <th scope="col">{% trans 'Confirmed' %}</th>
+            <th scope="col"></th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for device in devices %}
+        <tr>
+            <th scope="row">{{ device.name }}</th>
+            <td>{{ device.confirmed|yesno }}</td>
+            <td>
+            <a class="btn btn-info" href="{% url 'kleides_mfa:update' plugin.slug device.pk %}">{% trans 'edit' %}</a>
+            <a class="btn btn-danger" href="{% url 'kleides_mfa:delete' plugin.slug device.pk %}">{% trans 'delete' %}</a>
+            </td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="3">{{ _('No authentication devices of this type are configured') }}</td</tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<a class="btn btn-primary" href="{% url 'kleides_mfa:create' plugin.slug %}">{% blocktrans with name=plugin.name %}Add {{ name }}{% endblocktrans %}</a>

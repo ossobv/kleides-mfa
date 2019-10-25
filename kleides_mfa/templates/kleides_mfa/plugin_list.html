@@ -1,0 +1,23 @@
+{% extends "kleides_mfa/base.html" %}
+
+{% load i18n static %}
+
+{% block content %}
+<h1>{% trans '2 Step Authentication' %}</h1>
+<p>
+{% trans 'These are your 2 step authentication methods.' %}
+</p>
+
+{% for plugin, devices in plugins %}
+    {% include plugin.device_list_template|default:"kleides_mfa/device_list.html" %}
+{% endfor %}
+{% endblock content %}
+
+
+{% block extra_js %}
+{% for plugin, devices in plugins %}
+{% if plugin.device_list_javascript %}
+    <script type="text/javascript" src="{% static plugin.device_list_javascript %}"></script>
+{% endif %}
+{% endfor %}
+{% endblock extra_js %}

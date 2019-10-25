@@ -1,0 +1,28 @@
+{% extends "kleides_mfa/base.html" %}
+
+{% load crispy_forms_tags i18n %}
+
+{% block content %}
+<h1>{% blocktrans with name=plugin.name %}Verify {{ name }}{% endblocktrans %}</h1>
+
+{% block form_description %}{% endblock form_description %}
+
+<form id="kleides-mfa-verify-form" action="" method="post" novalidate>{% csrf_token %}
+    {{ form|crispy }}
+
+    {% if plugin.show_verify_button %}
+    <button class='btn btn-primary' type='submit'>{% trans 'Verify' %}</button>
+    {% endif %}
+    <div>
+      <button class="btn btn-secondary dropdown-toggle" type="button" id="kleides-mfa-alternate-methods" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        {% trans 'Other methods' %}
+      </button>
+      <div class="dropdown-menu" aria-labelledby="kleides-mfa-alternate-methods">
+        {% for plugin, device in user_devices %}
+        <a class="dropdown-item" href="{% url 'kleides_mfa:verify' plugin.slug device.pk %}?next={{ next }}">{{ device.name }}</a>
+        {% endfor %}
+      </div>
+    </div>
+
+</form>
+{% endblock content %}

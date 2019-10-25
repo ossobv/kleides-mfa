@@ -1,0 +1,17 @@
+{% extends "kleides_mfa/base.html" %}
+
+{% load crispy_forms_tags i18n %}
+
+{% block content %}
+<h1>{% blocktrans with name=plugin.name %}Add {{ name }} authentication{% endblocktrans %}</h1>
+
+{% block form_description %}{% endblock form_description %}
+
+<form id="kleides-mfa-form" action="" method="post" novalidate>{% csrf_token %}
+    {{ form|crispy }}
+
+    {% if plugin.show_create_button %}
+    <button class='btn btn-primary' type='submit'>{{ plugin.create_button_label|default:_('Add') }}</button>
+    {% endif %}
+</form>
+{% endblock content %}

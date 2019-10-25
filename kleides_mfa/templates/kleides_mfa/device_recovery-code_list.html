@@ -1,0 +1,28 @@
+{% load i18n %}
+
+<h2>{{ plugin.name }}</h2>
+{% trans 'If you lose your primary authentication device you can recover your account access with a recovery code.' %}
+
+{% with recovery_device=devices.0 %}
+<p>
+{% with tokens=recovery_device.token_set.all %}
+{% if tokens %}
+{% blocktrans with amount=tokens|length %}You have {{ amount }} codes available right now.{% endblocktrans %}
+<button id='kleides-mfa-show-tokens'>{% trans 'Show codes' %}</button><br>
+<textarea id='kleides-mfa-tokens' style='display: none; overflow: hidden; resize: none;'>{% for token in tokens %}{{ token.token }}{% if not forloop.last %}
+{% endif %}{% endfor %}</textarea><br>
+
+{% trans 'Note: If you generate new codes this will disable your current codes.' %}
+{% else %}
+{% trans 'You have no recovery codes available, do you want to generate some codes?' %}
+{% endif %}
+{% endwith %}
+</p>
+
+<form id="kleides-mfa-create-recovery-form" action="{% url 'kleides_mfa:create' plugin.slug %}" method="post" style="display: inline;">{% csrf_token %}
+<button class='btn btn-primary' type='submit'>{% trans 'Generate codes' %}</button>
+</form>
+{% if recovery_device %}
+<a class='btn btn-danger' href="{% url 'kleides_mfa:delete' plugin.slug recovery_device.pk %}">{% trans 'Disable codes' %}</a>
+{% endif %}
+{% endwith %}
