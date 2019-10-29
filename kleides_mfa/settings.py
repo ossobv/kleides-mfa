@@ -9,3 +9,5 @@ from django.conf import settings
 PLUGIN_PRIORITY = getattr(settings, 'KLEIDES_MFA_PLUGIN_PRIORITY', [
     'u2f', 'yubikey', 'totp', 'recovery-code',
 ])
+
+PATCH_ADMIN = getattr(settings, 'KLEIDES_MFA_PATCH_ADMIN', True)

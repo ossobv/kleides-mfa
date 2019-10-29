@@ -85,6 +85,12 @@ class KleidesMfaPluginRegistry():
             if slug in self._registry:
                 yield self._registry[slug]
 
+    def user_has_device(self, user, confirmed=True):
+        for plugin in self.plugins():
+            if plugin.get_user_devices(user, confirmed):
+                return True
+        return False
+
     def plugins_with_user_devices(self, user, confirmed=True):
         '''
         Return an iterable of the plugins with devices registered by the user.
