@@ -62,10 +62,11 @@ class DeviceVerifyView(UnverifiedUserMixin, PluginMixin, DjangoLoginView):
         return kwargs
 
     def get_form_class(self):
-        if self.plugin.verify_form is None:
+        form_class = self.plugin.get_verify_form_class()
+        if form_class is None:
             raise Http404(
                 'Plugin {} does not support this'.format(self.plugin))
-        return self.plugin.verify_form
+        return form_class
 
     def get_object(self):
         # Fetch the the confirmed device of the unverified user.

@@ -17,25 +17,28 @@ requirements = [
     'django-crispy-forms',
 ]
 
-setup_requirements = []
-
-test_requirements = []
-
 setup(
     author="Harm Geerts",
     author_email='hgeerts@osso.nl',
     python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*',
     classifiers=[
-        'Development Status :: 2 - Pre-Alpha',
+        'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
+        'Environment :: Web Environment',
         'Natural Language :: English',
+        'Framework :: Django',
+        'Framework :: Django :: 2.1',
+        'Framework :: Django :: 2.2',
+        'Programming Language :: Python',
         "Programming Language :: Python :: 2",
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        ('Topic :: System :: Systems Administration :: '
+         'Authentication/Directory'),
     ],
     description="Interface components to configure and manage multi factor "
                 "authentication",
@@ -46,9 +49,6 @@ setup(
     keywords='kleides_mfa',
     name='kleides_mfa',
     packages=find_packages(include=['kleides_mfa', 'kleides_mfa.*']),
-    setup_requires=setup_requirements,
-    test_suite='tests.runtests.test_suite',
-    tests_require=test_requirements,
     version='0.1.0',
     zip_safe=False,
 )

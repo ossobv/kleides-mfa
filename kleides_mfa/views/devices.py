@@ -2,13 +2,12 @@
 from __future__ import absolute_import, unicode_literals
 
 from django.contrib import messages
-from django.forms import modelform_factory
 from django.http import Http404
-from django.utils.translation import ugettext_lazy as _
 from django.views.generic import (
     CreateView, DeleteView, TemplateView, UpdateView)
 
-from ..forms import DeviceUpdateForm
+from django_otp import DEVICE_ID_SESSION_KEY, login as django_otp_login
+
 from ..registry import registry
 from .mixins import (
     MultiFactorRequiredMixin, PluginMixin, SetupOrMFARequiredMixin,
@@ -30,27 +29,43 @@ class DeviceCreateView(SetupOrMFARequiredMixin, PluginMixin, CreateView):
     template_name_suffix = '_create_form'
 
     def get_form_class(self):
-        if self.plugin.create_form is None:
+        form_class = self.plugin.get_create_form_class()
+        if form_class is None:
             raise Http404(
                 'Plugin {} does not support this'.format(self.plugin))
-        return self.plugin.create_form
+        return form_class
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        # This is the users first device, use it to verify the user.
+        if not self.request.user.is_verified:
+            django_otp_login(self.request, self.object)
+        messages.success(
+            self.request, self.plugin.get_create_message(self.object))
+        return response
 
 
 class DeviceUpdateView(MultiFactorRequiredMixin, PluginMixin, UpdateView):
     def get_form_class(self):
-        if self.plugin.update_form is None:
-            return modelform_factory(
-                self.plugin.model, form=DeviceUpdateForm, fields=('name',))
-        return self.plugin.update_form
+        return self.plugin.get_update_form_class()
+
+    def form_valid(self, form):
+        messages.success(
+            self.request, self.plugin.get_update_message(self.object))
+        return super().form_valid(form)
 
 
 class DeviceDeleteView(MultiFactorRequiredMixin, PluginMixin, DeleteView):
     # XXX notification via email ?
     # XXX password confirmation ?
     def delete(self, request, *args, **kwargs):
-        message = _(
-            'The {plugin} "{name}" was deleted successfully.').format(
-                plugin=self.plugin, name=self.get_object().name)
+        message = self.plugin.get_delete_message(self.get_object())
         response = super().delete(request, *args, **kwargs)
         messages.warning(request, message)
+        # User has removed all authentication methods, disable his access.
+        if not registry.user_has_device(self.request.user, confirmed=True):
+            self.request.user.otp_device = None
+            if DEVICE_ID_SESSION_KEY in self.request.session:
+                del self.request.session[DEVICE_ID_SESSION_KEY]
+
         return response

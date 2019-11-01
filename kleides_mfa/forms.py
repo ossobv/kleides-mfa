@@ -5,7 +5,6 @@ import time
 
 from django import forms
 from django.conf import settings
-from django.contrib import messages
 from django.utils.translation import ugettext_lazy as _
 
 from django_otp.oath import TOTP
@@ -96,23 +95,9 @@ class DeviceCreateForm(BaseDeviceForm):
                     self.plugin, self.instance.persistent_id, self.instance))
         self.instance.confirmed = True
 
-    def save(self, *args, **kwargs):
-        obj = super().save(*args, **kwargs)
-        messages.success(
-            self.request,
-            _('Your {plugin} "{name}" is ready to use.').format(
-                plugin=self.plugin, name=obj.name))
-        return obj
-
 
 class DeviceUpdateForm(BaseDeviceForm):
-    def save(self, *args, **kwargs):
-        obj = super().save(*args, **kwargs)
-        messages.info(
-            self.request,
-            _('Your {plugin} "{name}" was changed successfully.').format(
-                plugin=self.plugin, name=obj.name))
-        return obj
+    pass
 
 
 class TOTPDeviceCreateForm(DeviceCreateForm):
@@ -190,9 +175,6 @@ class RecoveryDeviceForm(DeviceUpdateForm):
         instance.token_set.all().delete()
         for i in range(self.token_amount):
             instance.token_set.create(token=StaticToken.random_token())
-        messages.success(
-            self.request, _('Your new codes have been generated, save them '
-                            'somewhere safe!'))
         return instance
 
     class Meta:

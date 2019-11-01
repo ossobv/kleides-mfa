@@ -1,7 +1,7 @@
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import, unicode_literals
+
 # kleides-mfa test project
-
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 from os.path import abspath, dirname, join
 
 
@@ -82,6 +82,9 @@ OTP_TOTP_ISSUER = 'Kleides MFA'
 
 ALLOWED_HOSTS = [
     'localhost.osso.ninja',
+    'localhost',
+    '127.0.0.1',
+    'testserver',
 ]
 STATIC_URL = '/static/'
 STATIC_ROOT = project_path('../static/')

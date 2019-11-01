@@ -3,9 +3,7 @@ from __future__ import absolute_import, unicode_literals
 
 from django.apps import AppConfig, apps
 from django.contrib.auth import get_user_model
-
-from .registry import registry
-from . import settings
+from django.utils.translation import ugettext_lazy as _
 
 
 def is_authenticated(user):
@@ -38,6 +36,9 @@ class KleidesMfaConfig(AppConfig):
     verbose_name = 'Kleides Multi Factor Authentication'
 
     def ready(self):
+        from . import settings
+        from .registry import registry
+
         # Monkey patch user authentication properties.
         User = get_user_model()
         User.is_verified = property(is_verified)
@@ -50,20 +51,26 @@ class KleidesMfaConfig(AppConfig):
             from .forms import TOTPDeviceCreateForm, DeviceVerifyForm
             from django_otp.plugins.otp_totp.models import TOTPDevice
             registry.register(
-                'TOTP', TOTPDevice, create_form=TOTPDeviceCreateForm,
-                verify_form=DeviceVerifyForm)
+                'TOTP', TOTPDevice, create_form_class=TOTPDeviceCreateForm,
+                verify_form_class=DeviceVerifyForm)
 
         if apps.is_installed('django_otp.plugins.otp_static'):
             from .forms import RecoveryDeviceForm, DeviceVerifyForm
             from django_otp.plugins.otp_static.models import StaticDevice
+            message = _('Your recovery codes have been generated, save them '
+                        'somewhere safe! Any old codes you have will no '
+                        'longer be usable.')
+            delete_message = _('Your recovery codes have been disabled!')
             registry.register(
                 'Recovery code', StaticDevice,
                 device_list_javascript='js/kleides_mfa/recovery-code.js',
                 device_list_template=(
                     'kleides_mfa/device_recovery-code_list.html'),
-                create_form=RecoveryDeviceForm,
-                update_form=RecoveryDeviceForm,
-                verify_form=DeviceVerifyForm)
+                create_form_class=RecoveryDeviceForm,
+                update_form_class=RecoveryDeviceForm,
+                verify_form_class=DeviceVerifyForm,
+                create_message=message, update_message=message,
+                delete_message=delete_message)
 
         if settings.PATCH_ADMIN:
             from django.contrib import admin

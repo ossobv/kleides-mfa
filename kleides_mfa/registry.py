@@ -3,8 +3,11 @@ from __future__ import absolute_import, unicode_literals
 
 from collections import namedtuple
 
+from django.forms import modelform_factory
 from django.utils.text import slugify
+from django.utils.translation import ugettext_lazy as _
 
+from .forms import DeviceUpdateForm
 from .settings import PLUGIN_PRIORITY
 
 __all__ = ['registry']
@@ -19,15 +22,20 @@ class AlreadyRegistered(Exception):
 
 class KleidesMfaPlugin():
     def __init__(
-            self, name, model, create_form=None, update_form=None,
-            verify_form=None, show_create_button=True, show_verify_button=True,
-            device_list_javascript=None, device_list_template=None):
+            self, name, model, create_form_class=None, update_form_class=None,
+            verify_form_class=None, show_create_button=True,
+            create_message=None, update_message=None, delete_message=None,
+            show_verify_button=True, device_list_javascript=None,
+            device_list_template=None):
         self.slug = slugify(name)
         self.name = name
         self.model = model
-        self.create_form = create_form
-        self.update_form = update_form
-        self.verify_form = verify_form
+        self.create_form_class = create_form_class
+        self.update_form_class = update_form_class
+        self.verify_form_class = verify_form_class
+        self.create_message = create_message
+        self.update_message = update_message
+        self.delete_message = delete_message
         self.device_list_javascript = device_list_javascript
         self.device_list_template = device_list_template
         self.show_create_button = show_create_button
@@ -40,12 +48,38 @@ class KleidesMfaPlugin():
         return 'KleidesMfaPlugin(name={!r}, model={!r})'.format(
             self.name, self.model)
 
-    def __eq__(self, other):
-        return bool(
-            self.__class__ == other.__class__ and self.slug == other.slug)
+    def get_create_form_class(self):
+        return self.create_form_class
 
-    def __hash__(self):
-        return hash(self.slug)
+    def get_update_form_class(self):
+        if self.update_form_class is None:
+            return modelform_factory(
+                self.model, form=DeviceUpdateForm, fields=('name',))
+        return self.update_form_class
+
+    def get_verify_form_class(self):
+        return self.verify_form_class
+
+    def get_create_message(self, device):
+        if self.create_message is not None:
+            message = self.create_message
+        else:
+            message = _('The {plugin} "{name}" was added successfully.')
+        return message.format(plugin=self.name, name=device.name)
+
+    def get_update_message(self, device):
+        if self.update_message is not None:
+            message = self.update_message
+        else:
+            message = _('The {plugin} "{name}" was changed successfully.')
+        return message.format(plugin=self.name, name=device.name)
+
+    def get_delete_message(self, device):
+        if self.delete_message is not None:
+            message = self.delete_message
+        else:
+            message = _('The {plugin} "{name}" was deleted successfully.')
+        return message.format(plugin=self.name, name=device.name)
 
     def get_user_device(self, device_id, user, confirmed=True):
         return self.model.objects.devices_for_user(user, confirmed).get(
@@ -73,6 +107,9 @@ class KleidesMfaPluginRegistry():
 
     def register(self, *args, **kwargs):
         self.register_plugin(KleidesMfaPlugin(*args, **kwargs))
+
+    def unregister(self, name_or_slug):
+        return self._registry.pop(slugify(name_or_slug))
 
     def get_plugin(self, slug):
         return self._registry[slug]

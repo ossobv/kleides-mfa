@@ -79,7 +79,7 @@ class SetupOrMFARequiredMixin(UserPassesTestMixin):
     '''
     def test_func(self):
         user = self.request.user
-        if getattr(self.request.user, 'is_verified', False):
+        if getattr(user, 'is_verified', False):
             return True
         return (
             getattr(user, 'is_single_factor_authenticated', False) and
