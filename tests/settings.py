@@ -14,7 +14,7 @@ DEBUG = True
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': project_path('kleides-mfa.db'),
+        'NAME': ':memory:',
     }
 }
 
@@ -26,14 +26,11 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.messages',
 
-    'django_extensions',
-
     'django_otp',
     'django_otp.plugins.otp_email',
     'django_otp.plugins.otp_hotp',
     'django_otp.plugins.otp_static',
     'django_otp.plugins.otp_totp',
-    'otp_u2f',
 
     'kleides_mfa',
     'crispy_forms',
@@ -81,7 +78,6 @@ CRISPY_TEMPLATE_PACK = 'bootstrap4'
 OTP_TOTP_ISSUER = 'Kleides MFA'
 
 ALLOWED_HOSTS = [
-    'localhost.osso.ninja',
     'localhost',
     '127.0.0.1',
     'testserver',
