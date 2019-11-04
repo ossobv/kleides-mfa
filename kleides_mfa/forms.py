@@ -70,6 +70,11 @@ class BaseDeviceForm(forms.ModelForm):
             self.fields['name'].widget.attrs['placeholder'] = _(
                 'Friendly name')
 
+    def clean_name(self):
+        if self.cleaned_data.get('name'):
+            return self.cleaned_data['name']
+        return self.plugin.name
+
 
 class DeviceCreateForm(BaseDeviceForm):
     error_messages = {
@@ -115,11 +120,6 @@ class TOTPDeviceCreateForm(DeviceCreateForm):
         # If alternate TOTPDevice settings are needed set them here.
         # self.instance.digits = 8  # increase token length.
         # self.instance.tolerance = 2  # for users that are veeeeery slow.
-
-    def clean_name(self):
-        if self.cleaned_data.get('name'):
-            return self.cleaned_data['name']
-        return _('TOTP ')
 
     def clean(self):
         try:
