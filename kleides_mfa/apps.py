@@ -72,7 +72,7 @@ class KleidesMfaConfig(AppConfig):
                 create_message=message, update_message=message,
                 delete_message=delete_message)
 
-        if settings.PATCH_ADMIN:
+        if apps.is_installed('django.contrib.admin') and settings.PATCH_ADMIN:
             from django.contrib import admin
             from .admin import AdminSiteMfaRequiredMixin
             MfaAdminSite = type(
