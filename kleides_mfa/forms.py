@@ -4,6 +4,7 @@ from __future__ import absolute_import, unicode_literals
 import time
 
 from django import forms
+from django.apps import apps
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 
@@ -122,8 +123,9 @@ class TOTPDeviceCreateForm(DeviceCreateForm):
         # self.instance.tolerance = 2  # for users that are veeeeery slow.
 
     def clean(self):
+        cleaned_data = super().clean()
         try:
-            token = int(self.cleaned_data.get('otp_token'))
+            token = int(cleaned_data.get('otp_token'))
         except (TypeError, ValueError):
             verified = False
         else:
@@ -145,11 +147,8 @@ class TOTPDeviceCreateForm(DeviceCreateForm):
                     self.instance.drift = totp.drift
         if not verified:
             raise forms.ValidationError(self.error_messages['invalid'])
-        return self.cleaned_data
-
-    def save(self, *args, **kwargs):
         try:
-            return super().save(*args, **kwargs)
+            return cleaned_data
         finally:
             if TOTP_SESSION_KEY in self.request.session:
                 del self.request.session[TOTP_SESSION_KEY]
@@ -180,3 +179,42 @@ class RecoveryDeviceForm(DeviceUpdateForm):
     class Meta:
         model = StaticDevice
         fields = ()
+
+
+if apps.is_installed('otp_yubikey'):
+    from otp_yubikey.models import RemoteYubikeyDevice, ValidationService
+
+    class YubikeyDeviceCreateForm(DeviceCreateForm):
+        service = forms.ModelChoiceField(
+            label=_('Service'), queryset=ValidationService.objects.all(),
+            empty_label=None, initial=0)
+        otp_token = forms.CharField(label=_('Token'))
+
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.fields['otp_token'].widget.attrs.update({
+                'autocomplete': 'off', 'autofocus': 'autofocus'})
+            try:
+                self.fields['service'].initial = (
+                    self.fields['service'].queryset.get().pk)
+                self.fields['service'].widget = forms.HiddenInput()
+            except ValidationService.MultipleObjectsReturned:
+                # Multiple is good, none is bad.
+                pass
+
+        def clean(self):
+            cleaned_data = super().clean()
+            token = self.cleaned_data.get('otp_token')
+            service = self.cleaned_data.get('service')
+            verified = False
+            if token and service:
+                self.instance.service = service
+                self.instance.public_id = token[:-32]
+                verified = self.instance.verify_token(token)
+            if not verified:
+                raise forms.ValidationError(self.error_messages['invalid'])
+            return cleaned_data
+
+        class Meta:
+            model = RemoteYubikeyDevice
+            fields = ('service', 'name', 'otp_token',)

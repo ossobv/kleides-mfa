@@ -72,6 +72,19 @@ class KleidesMfaConfig(AppConfig):
                 create_message=message, update_message=message,
                 delete_message=delete_message)
 
+        if apps.is_installed('otp_yubikey'):
+            from .forms import DeviceVerifyForm, YubikeyDeviceCreateForm
+            from otp_yubikey.models import (
+                RemoteYubikeyDevice, ValidationService)
+            if ValidationService.objects.count() == 0:
+                ValidationService.objects.get_or_create(defaults={
+                    'name': 'YubiCloud', 'use_ssl': True,
+                    'param_sl': '', 'param_timeout': ''})
+            registry.register(
+                'Yubikey', RemoteYubikeyDevice,
+                create_form_class=YubikeyDeviceCreateForm,
+                verify_form_class=DeviceVerifyForm)
+
         if apps.is_installed('django.contrib.admin') and settings.PATCH_ADMIN:
             from django.contrib import admin
             from .admin import AdminSiteMfaRequiredMixin
