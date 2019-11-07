@@ -3,6 +3,7 @@ from __future__ import absolute_import, unicode_literals
 
 from django.apps import AppConfig, apps
 from django.contrib.auth import get_user_model
+from django.db.models.signals import post_migrate
 from django.utils.translation import ugettext_lazy as _
 
 
@@ -29,6 +30,18 @@ def is_single_factor_authenticated(user):
     Always returns True for authenticated users.
     '''
     return bool(not user.is_anonymous)
+
+
+def create_yubikey_validationservice(app_config, **kwargs):
+    '''
+    Make sure at least one ValidationService exists.
+    '''
+    from otp_yubikey.models import ValidationService
+    if (app_config.label == 'otp_yubikey' and
+            ValidationService.objects.all().count() == 0):
+        ValidationService.objects.get_or_create(defaults={
+            'name': 'YubiCloud', 'use_ssl': True,
+            'param_sl': '', 'param_timeout': ''})
 
 
 class KleidesMfaConfig(AppConfig):
@@ -74,16 +87,14 @@ class KleidesMfaConfig(AppConfig):
 
         if apps.is_installed('otp_yubikey'):
             from .forms import DeviceVerifyForm, YubikeyDeviceCreateForm
-            from otp_yubikey.models import (
-                RemoteYubikeyDevice, ValidationService)
-            if ValidationService.objects.count() == 0:
-                ValidationService.objects.get_or_create(defaults={
-                    'name': 'YubiCloud', 'use_ssl': True,
-                    'param_sl': '', 'param_timeout': ''})
+            from otp_yubikey.models import RemoteYubikeyDevice
             registry.register(
                 'Yubikey', RemoteYubikeyDevice,
                 create_form_class=YubikeyDeviceCreateForm,
                 verify_form_class=DeviceVerifyForm)
+            post_migrate.connect(
+                create_yubikey_validationservice,
+                dispatch_uid='kleides_mfa.apps.KleidesMfaConfig')
 
         if apps.is_installed('django.contrib.admin') and settings.PATCH_ADMIN:
             from django.contrib import admin
