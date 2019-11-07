@@ -150,7 +150,7 @@ class TOTPDeviceCreateForm(DeviceCreateForm):
         try:
             return cleaned_data
         finally:
-            if TOTP_SESSION_KEY in self.request.session:
+            if TOTP_SESSION_KEY in self.request.session:  # pragma: no cover
                 del self.request.session[TOTP_SESSION_KEY]
 
     class Meta:
@@ -181,13 +181,13 @@ class RecoveryDeviceForm(DeviceUpdateForm):
         fields = ()
 
 
-if apps.is_installed('otp_yubikey'):
+if apps.is_installed('otp_yubikey'):  # pragma: no branch
     from otp_yubikey.models import RemoteYubikeyDevice, ValidationService
 
     class YubikeyDeviceCreateForm(DeviceCreateForm):
         service = forms.ModelChoiceField(
             label=_('Service'), queryset=ValidationService.objects.all(),
-            empty_label=None, initial=0)
+            empty_label=None)
         otp_token = forms.CharField(label=_('Token'))
 
         def __init__(self, *args, **kwargs):

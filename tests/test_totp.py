@@ -29,10 +29,19 @@ class DjangoOtpTotpTestCase(TestCase):
         self.assertRedirects(response, redirect_to)
         return response
 
-    @override_settings(OTP_TOTP_THROTTLE_FACTOR=0)
+    @override_settings(OTP_TOTP_SYNC=True, OTP_TOTP_THROTTLE_FACTOR=0)
     def test_totp(self):
         user = UserFactory()
         self.login(user)
+
+        response = self.client.post(
+            '/totp/create/', {'otp_token': 'XXX', 'name': 'My Phone'})
+        self.assertContains(
+            response, 'Unable to validate the token with the device.')
+        response = self.client.post(
+            '/totp/create/', {'otp_token': '123456', 'name': 'My Phone'})
+        self.assertContains(
+            response, 'Unable to validate the token with the device.')
 
         # User takes the TOTP config and applies it to his device.
         response = self.client.get('/totp/create/')
@@ -74,7 +83,7 @@ class DjangoOtpTotpTestCase(TestCase):
             response, 'The token is not valid for this device.')
 
         # Default tolerance is 1, increase drift to force next token.
-        totp.drift += 1
+        totp.drift = 1
         response = self.client.post(verify_url, {'otp_token': totp.token()})
         self.assertRedirects(response, '/list/')
 
@@ -82,3 +91,18 @@ class DjangoOtpTotpTestCase(TestCase):
             '/totp/delete/{}/'.format(device.pk), follow=True)
         self.assertContains(
             response, 'The TOTP &quot;Acme ID&quot; was deleted successfully.')
+
+    @override_settings(OTP_TOTP_SYNC=False)
+    def test_otp_sync(self):
+        user = UserFactory()
+        self.login(user)
+
+        response = self.client.get('/totp/create/')
+        totp = self.totp_from_form(response.context['form'])
+        totp.drift = 1
+        response = self.client.post(
+            '/totp/create/', {'otp_token': totp.token()})
+        self.assertRedirects(response, '/list/')
+        device = user.totpdevice_set.get()
+        self.assertTrue(device.confirmed)
+        self.assertEqual(device.drift, 0)

@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     'django_otp.plugins.otp_hotp',
     'django_otp.plugins.otp_static',
     'django_otp.plugins.otp_totp',
+    'otp_yubikey',
 
     'kleides_mfa',
     'crispy_forms',
