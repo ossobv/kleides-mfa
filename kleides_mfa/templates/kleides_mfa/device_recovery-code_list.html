@@ -1,9 +1,18 @@
 {% load i18n %}
 
+{% with recovery_device=devices.0 %}
+<div class='position-relative'>
+  <div class="float-right">
+    <form id="kleides-mfa-create-recovery-form" action="{% url 'kleides_mfa:create' plugin.slug %}" method="post" class='d-inline-block'>{% csrf_token %}
+      <button class='btn btn-primary' type='submit'>{% trans 'Generate codes' %}</button>
+    </form>
+    {% if recovery_device %}
+      <a class='btn btn-danger' href="{% url 'kleides_mfa:delete' plugin.slug recovery_device.pk %}">{% trans 'Disable codes' %}</a>
+    {% endif %}
+  </div>
 <h2>{{ plugin.name }}</h2>
 {% trans 'If you lose your primary authentication device you can recover your account access with a recovery code.' %}
 
-{% with recovery_device=devices.0 %}
 <p>
 {% with tokens=recovery_device.token_set.all %}
 {% if tokens %}
@@ -19,10 +28,5 @@
 {% endwith %}
 </p>
 
-<form id="kleides-mfa-create-recovery-form" action="{% url 'kleides_mfa:create' plugin.slug %}" method="post" style="display: inline;">{% csrf_token %}
-<button class='btn btn-primary' type='submit'>{% trans 'Generate codes' %}</button>
-</form>
-{% if recovery_device %}
-<a class='btn btn-danger' href="{% url 'kleides_mfa:delete' plugin.slug recovery_device.pk %}">{% trans 'Disable codes' %}</a>
-{% endif %}
+</div>
 {% endwith %}

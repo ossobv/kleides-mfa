@@ -1,12 +1,14 @@
 {% load i18n %}
 
+<div class='position-relative'>
+<a class="btn btn-primary float-right" href="{% url 'kleides_mfa:create' plugin.slug %}">{% blocktrans with name=plugin.name %}Add {{ name }}{% endblocktrans %}</a>
 <h2>{{ plugin.name }}</h2>
 <table id="device-list" class="table table-striped">
     <thead>
         <tr>
-            <th scope="col">{% trans 'Name' %}</th>
-            <th scope="col">{% trans 'Confirmed' %}</th>
-            <th scope="col"></th>
+            <th class="w-50" scope="col">{% trans 'Name' %}</th>
+            <th class="w-25" scope="col">{% trans 'Confirmed' %}</th>
+            <th class="w-25" scope="col"></th>
         </tr>
     </thead>
     <tbody>
@@ -14,7 +16,7 @@
         <tr>
             <th scope="row">{{ device.name }}</th>
             <td>{{ device.confirmed|yesno }}</td>
-            <td>
+            <td class="text-right">
             <a class="btn btn-info" href="{% url 'kleides_mfa:update' plugin.slug device.pk %}">{% trans 'edit' %}</a>
             <a class="btn btn-danger" href="{% url 'kleides_mfa:delete' plugin.slug device.pk %}">{% trans 'delete' %}</a>
             </td>
@@ -24,5 +26,4 @@
     {% endfor %}
     </tbody>
 </table>
-
-<a class="btn btn-primary" href="{% url 'kleides_mfa:create' plugin.slug %}">{% blocktrans with name=plugin.name %}Add {{ name }}{% endblocktrans %}</a>
+</div>
