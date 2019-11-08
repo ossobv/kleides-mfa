@@ -41,7 +41,10 @@ class KleidesAuthenticationMiddleware(object):
         """
         device = None
 
-        if not user.is_anonymous:
+        if user.is_anonymous:
+            user.is_verified = False
+            user.is_single_factor_authenticated = False
+        else:
             persistent_id = request.session.get(DEVICE_ID_SESSION_KEY)
             if persistent_id:
                 device = Device.from_persistent_id(persistent_id)
@@ -53,4 +56,5 @@ class KleidesAuthenticationMiddleware(object):
                 del request.session[DEVICE_ID_SESSION_KEY]
 
         user.otp_device = device
+
         return user
