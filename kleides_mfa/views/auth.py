@@ -4,6 +4,7 @@ from __future__ import absolute_import, unicode_literals
 from django.contrib.auth import login
 from django.contrib.auth.views import LoginView as DjangoLoginView
 from django.http import Http404, HttpResponseRedirect
+from django.shortcuts import resolve_url
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.encoding import force_text
@@ -12,11 +13,17 @@ from django.utils.http import urlencode
 from .mixins import (
     BACKEND_SESSION_KEY, HASH_SESSION_KEY, SESSION_KEY, VERIFIED_SESSION_KEY,
     PluginMixin, UnverifiedUserMixin)
+from .. import settings
 from ..registry import registry
 
 
 class LoginView(DjangoLoginView):
     template_name = 'kleides_mfa/login.html'
+
+    def get_success_url(self):
+        if not self.request.user.is_verified:
+            return resolve_url(settings.SINGLE_FACTOR_URL)
+        return super().get_success_url()
 
     def form_valid(self, form):
         # If the user has any authentication methods remaining they must be

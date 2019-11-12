@@ -11,3 +11,8 @@ PLUGIN_PRIORITY = getattr(settings, 'KLEIDES_MFA_PLUGIN_PRIORITY', [
 ])
 
 PATCH_ADMIN = getattr(settings, 'KLEIDES_MFA_PATCH_ADMIN', True)
+
+# The default url to redirect to after login when the user has no 2 step
+# authentication devices active on the account.
+SINGLE_FACTOR_URL = getattr(
+    settings, 'KLEIDES_MFA_SINGLE_FACTOR_URL', 'kleides_mfa:index')
