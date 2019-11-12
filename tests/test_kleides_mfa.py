@@ -27,13 +27,16 @@ class KleidesMfaTestCase(TestCase):
         # Force the user to login with 2 step authentication.
         # django-otp should do this if the otp_device is set.
         user.otp_device = device
+
+        # Login may clear the session if a user was logged in.
+        self.client.force_login(user)
+
         # Except the user is taken from the request, the test client does not
         # set it and django login does not add it unless the user attribute
         # already exists...
         session = self.client.session
         session[DEVICE_ID_SESSION_KEY] = device.persistent_id
         session.save()
-        return self.client.force_login(user)
 
     def test_login_failure(self):
         response = self.client.post(
