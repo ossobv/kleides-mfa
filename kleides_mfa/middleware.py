@@ -41,10 +41,7 @@ class KleidesAuthenticationMiddleware(object):
         """
         device = None
 
-        if user.is_anonymous:
-            user.is_verified = False
-            user.is_single_factor_authenticated = False
-        else:
+        if not user.is_anonymous:
             persistent_id = request.session.get(DEVICE_ID_SESSION_KEY)
             if persistent_id:
                 device = Device.from_persistent_id(persistent_id)

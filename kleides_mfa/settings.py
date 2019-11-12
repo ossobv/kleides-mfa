@@ -10,7 +10,12 @@ PLUGIN_PRIORITY = getattr(settings, 'KLEIDES_MFA_PLUGIN_PRIORITY', [
     'u2f', 'yubikey', 'totp', 'recovery-code',
 ])
 
+# Patch the AdminSite class and default admin site instance to require
+# 2 step authentication.
 PATCH_ADMIN = getattr(settings, 'KLEIDES_MFA_PATCH_ADMIN', True)
+# Patch the active User model and the AnonymousUser with 2 step authentication
+# properties.
+PATCH_USER = getattr(settings, 'KLEIDES_MFA_PATCH_USER', True)
 
 # The default url to redirect to after login when the user has no 2 step
 # authentication devices active on the account.

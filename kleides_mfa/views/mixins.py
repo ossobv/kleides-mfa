@@ -60,8 +60,7 @@ class SingleFactorRequiredMixin(UserPassesTestMixin):
     Verify that the user is authenticated with a single authentication factor.
     '''
     def test_func(self):
-        return getattr(
-            self.request.user, 'is_single_factor_authenticated', False)
+        return self.request.user.is_single_factor_authenticated
 
 
 class MultiFactorRequiredMixin(UserPassesTestMixin):
@@ -69,7 +68,7 @@ class MultiFactorRequiredMixin(UserPassesTestMixin):
     Verify that the user is authenticated with multiple authentication factors.
     '''
     def test_func(self):
-        return getattr(self.request.user, 'is_verified', False)
+        return self.request.user.is_verified
 
 
 class SetupOrMFARequiredMixin(UserPassesTestMixin):
@@ -79,10 +78,10 @@ class SetupOrMFARequiredMixin(UserPassesTestMixin):
     '''
     def test_func(self):
         user = self.request.user
-        if getattr(user, 'is_verified', False):
+        if user.is_verified:
             return True
         return (
-            getattr(user, 'is_single_factor_authenticated', False) and
+            user.is_single_factor_authenticated and
             not registry.user_has_device(user, confirmed=True))
 
 

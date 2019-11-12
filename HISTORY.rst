@@ -2,6 +2,16 @@
 History
 =======
 
+0.1.4 (2019-11-12)
+------------------
+
+* Add setting to disable patching of the User models.
+* Patch AnonymousUser to share the properties of the User model.
+* Add configurable redirect for users that login without 2 step
+  authentication.
+* Fix 2 step test login when another user was logged in.
+
+
 0.1.3 (2019-11-07)
 ------------------
 
