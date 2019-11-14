@@ -34,7 +34,6 @@ INSTALLED_APPS = [
     'otp_yubikey',
 
     'kleides_mfa',
-    'crispy_forms',
 ]
 
 MIDDLEWARE = [
@@ -73,8 +72,6 @@ TEMPLATES = [
 SECRET_KEY = 'XXX'
 
 ROOT_URLCONF = 'tests.urls'
-
-CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
 OTP_TOTP_ISSUER = 'Kleides MFA'
 

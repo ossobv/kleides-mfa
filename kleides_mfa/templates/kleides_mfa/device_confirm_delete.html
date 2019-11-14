@@ -1,6 +1,6 @@
 {% extends "kleides_mfa/base.html" %}
 
-{% load crispy_forms_tags i18n %}
+{% load i18n %}
 
 {% block content %}
 <h1>{% blocktrans with name=plugin.name %}Delete {{ name }} authentication{% endblocktrans %}</h1>

@@ -6,6 +6,7 @@ History
 ------------------
 
 * Use cloudflare for all external script/style.
+* Remove crispy forms as a hard dependency.
 
 
 0.1.4 (2019-11-12)
