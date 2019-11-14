@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, unicode_literals
 
+from django.conf import settings
+from django.shortcuts import resolve_url
 from django.test import TestCase
 
 from django_otp import DEVICE_ID_SESSION_KEY
 from django_otp.plugins.otp_totp.models import TOTPDevice
 
+from kleides_mfa import settings as mfa_settings
 from kleides_mfa.forms import DeviceUpdateForm
 from kleides_mfa.registry import AlreadyRegistered, registry
 
@@ -13,10 +16,10 @@ from .factories import UserFactory
 
 
 class KleidesMfaTestCase(TestCase):
-    def login(self, user, redirect_to='/list/'):
+    def login(self, user, redirect_to='/list/', login_url='/login/'):
         # The LoginView prepares the session for 2 step authentication.
         response = self.client.post(
-            '/login/',
+            login_url,
             {'username': user.username, 'password': user.raw_password},
             follow=True)
         self.assertRedirects(response, redirect_to)
@@ -135,6 +138,24 @@ class KleidesMfaTestCase(TestCase):
 
         response = self.client.get('/admin/', follow=True)
         self.assertEqual(response.status_code, 200)
+
+    def test_login_redirect(self):
+        user = UserFactory()
+        # without a device configured the redirect url is SINGLE_FACTOR_URL.
+        response = self.login(
+            user, redirect_to=resolve_url(mfa_settings.SINGLE_FACTOR_URL))
+
+        device = user.totpdevice_set.create(name='test')
+        verify_url = '/totp/verify/{}/?next='.format(device.pk)
+        # with a device configured the next redirect url is LOGIN_REDIRECT_URL.
+        response = self.login(
+            user,
+            redirect_to=verify_url + resolve_url(settings.LOGIN_REDIRECT_URL))
+
+        # Unless the user came here with a next parameter.
+        response = self.login(
+            user, login_url='/login/?next=/some/place/',
+            redirect_to=verify_url + '/some/place/')
 
     def test_plugin(self):
         # Plugins are allowed to use the same device/model.

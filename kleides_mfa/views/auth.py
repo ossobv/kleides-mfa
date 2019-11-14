@@ -20,8 +20,8 @@ from ..registry import registry
 class LoginView(DjangoLoginView):
     template_name = 'kleides_mfa/login.html'
 
-    def get_success_url(self):
-        if not self.request.user.is_verified:
+    def get_success_url(self, has_device=False):
+        if not has_device:
             return resolve_url(settings.SINGLE_FACTOR_URL)
         return super().get_success_url()
 
@@ -44,7 +44,8 @@ class LoginView(DjangoLoginView):
             redirect_url = reverse(
                 'kleides_mfa:verify', args=[plugin.slug, device.pk])
             params = urlencode(
-                {self.redirect_field_name: self.get_success_url()})
+                {self.redirect_field_name: self.get_success_url(
+                    has_device=True)})
             return HttpResponseRedirect('{}?{}'.format(redirect_url, params))
         # Otherwise the user is authenticated with a single factor and will
         # have to fortify his account by adding authentication methods.
