@@ -2,6 +2,12 @@
 History
 =======
 
+0.1.7 (2019-11-18)
+------------------
+
+* Actually remove django-crispy-forms as a hard dependency.
+
+
 0.1.6 (2019-11-14)
 ------------------
 

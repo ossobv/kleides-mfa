@@ -14,7 +14,6 @@ with open('HISTORY.rst') as history_file:
 requirements = [
     'Django',
     'django_otp',
-    'django-crispy-forms',
 ]
 
 setup(
