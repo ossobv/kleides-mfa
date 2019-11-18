@@ -6,6 +6,7 @@ History
 ------------------
 
 * Actually remove django-crispy-forms as a hard dependency.
+* Add function to get the authentication method of a logged in user.
 
 
 0.1.6 (2019-11-14)

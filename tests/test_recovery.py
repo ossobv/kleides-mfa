@@ -3,6 +3,8 @@ from __future__ import absolute_import, unicode_literals
 
 from django.test import TestCase
 
+from kleides_mfa.registry import registry
+
 from .factories import UserFactory
 
 
@@ -46,6 +48,10 @@ class DjangoOtpRecoveryTestCase(TestCase):
         context_user = response.context['user']
         self.assertTrue(context_user.is_authenticated)
         self.assertTrue(context_user.is_verified)
+
+        # Verify that the authentication method matches.
+        self.assertEqual(
+            registry.user_authentication_method(context_user), 'recovery-code')
 
         # The create and update form for recovery codes replace existing codes.
         self.client.post('/recovery-code/update/{}/'.format(device.pk))

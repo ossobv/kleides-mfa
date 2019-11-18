@@ -144,5 +144,15 @@ class KleidesMfaPluginRegistry():
             for device in plugin.get_user_devices(user, confirmed)
         ]
 
+    def user_authentication_method(self, user):
+        '''
+        Return the authentication method of a logged in User.
+        '''
+        if user.is_verified:
+            otp_class = user.otp_device.__class__
+            return next(
+                plugin.slug for plugin in self.plugins()
+                if otp_class == plugin.model)
+
 
 registry = KleidesMfaPluginRegistry()

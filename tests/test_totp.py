@@ -9,6 +9,8 @@ from django.test.utils import override_settings
 
 from django_otp.oath import TOTP
 
+from kleides_mfa.registry import registry
+
 from .factories import UserFactory
 
 
@@ -67,7 +69,10 @@ class DjangoOtpTotpTestCase(TestCase):
 
         # Login without TOTP.
         verify_url = '/totp/verify/{}/'.format(device.pk)
-        self.login(user, '{}?next=/list/'.format(verify_url))
+        response = self.login(user, '{}?next=/list/'.format(verify_url))
+
+        context_user = response.context['user']
+        self.assertTrue(context_user.is_anonymous)
 
         # User is forced to use 2 step authentication.
         response = self.client.get('/list/')
@@ -84,8 +89,17 @@ class DjangoOtpTotpTestCase(TestCase):
 
         # Default tolerance is 1, increase drift to force next token.
         totp.drift = 1
-        response = self.client.post(verify_url, {'otp_token': totp.token()})
+        response = self.client.post(
+            verify_url, {'otp_token': totp.token()}, follow=True)
         self.assertRedirects(response, '/list/')
+
+        context_user = response.context['user']
+        self.assertTrue(context_user.is_authenticated)
+        self.assertTrue(context_user.is_verified)
+
+        # Verify that the authentication method matches.
+        self.assertEqual(
+            registry.user_authentication_method(context_user), 'totp')
 
         response = self.client.post(
             '/totp/delete/{}/'.format(device.pk), follow=True)

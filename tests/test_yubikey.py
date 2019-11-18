@@ -10,6 +10,7 @@ from otp_yubikey.models import (
     RemoteYubikeyDevice, ValidationService, default_id)
 
 from kleides_mfa.forms import YubikeyDeviceCreateForm
+from kleides_mfa.registry import registry
 
 from .factories import UserFactory
 
@@ -73,7 +74,10 @@ class DjangoOtpYubikeyTestCase(TestCase):
 
         # Login without Yubikey.
         verify_url = '/yubikey/verify/{}/'.format(device.pk)
-        self.login(user, '{}?next=/list/'.format(verify_url))
+        response = self.login(user, '{}?next=/list/'.format(verify_url))
+
+        context_user = response.context['user']
+        self.assertTrue(context_user.is_anonymous)
 
         # User is forced to use 2 step authentication.
         mock_verify_token.return_value = False
@@ -96,8 +100,16 @@ class DjangoOtpYubikeyTestCase(TestCase):
         # Complete authentication with a new token.
         mock_verify_token.return_value = True
         response = self.client.post(
-            verify_url, {'otp_token': yubikey.generate()})
+            verify_url, {'otp_token': yubikey.generate()}, follow=True)
         self.assertRedirects(response, '/list/')
+
+        context_user = response.context['user']
+        self.assertTrue(context_user.is_authenticated)
+        self.assertTrue(context_user.is_verified)
+
+        # Verify that the authentication method matches.
+        self.assertEqual(
+            registry.user_authentication_method(context_user), 'yubikey')
 
         response = self.client.post(
             '/yubikey/delete/{}/'.format(device.pk), follow=True)
