@@ -81,8 +81,8 @@ class SetupOrMFARequiredMixin(UserPassesTestMixin):
         if user.is_verified:
             return True
         return (
-            user.is_single_factor_authenticated and
-            not registry.user_has_device(user, confirmed=True))
+            user.is_single_factor_authenticated
+            and not registry.user_has_device(user, confirmed=True))
 
 
 class UnverifiedUserMixin(UserPassesTestMixin):
