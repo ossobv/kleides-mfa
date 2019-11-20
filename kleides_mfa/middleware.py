@@ -12,9 +12,9 @@ from django_otp.models import Device
 class KleidesAuthenticationMiddleware(object):
     """
     This is a replacement for :class:`~django_otp.middleware.OTPMiddleware`
-    that uses ``is_anonymous`` instead of ``is_authenticated``. This allows
-    us to override the ``is_authenticated`` property to only return True
-    when the user has used 2 step authentication.
+    that uses ``is_single_factor_authenticated`` instead of
+    ``is_authenticated``. This allows us to override the ``is_authenticated``
+    property to only return True when the user has used 2 step authentication.
 
     This must be installed after
     :class:`~django.contrib.auth.middleware.AuthenticationMiddleware` and
@@ -41,7 +41,7 @@ class KleidesAuthenticationMiddleware(object):
         """
         device = None
 
-        if not user.is_anonymous:
+        if user.is_single_factor_authenticated:
             persistent_id = request.session.get(DEVICE_ID_SESSION_KEY)
             if persistent_id:
                 device = Device.from_persistent_id(persistent_id)
