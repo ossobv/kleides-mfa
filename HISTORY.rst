@@ -6,6 +6,7 @@ History
 ------------------
 
 * Escape the next parameter in the "Other method" device selection.
+* Show device name in verification form.
 
 
 0.1.7 (2019-11-18)
