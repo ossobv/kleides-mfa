@@ -2,6 +2,12 @@
 History
 =======
 
+0.1.8 (2019-12-10)
+------------------
+
+* Escape the next parameter in the "Other method" device selection.
+
+
 0.1.7 (2019-11-18)
 ------------------
 

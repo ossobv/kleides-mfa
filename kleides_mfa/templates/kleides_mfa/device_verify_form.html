@@ -19,7 +19,7 @@
       </button>
       <div class="dropdown-menu" aria-labelledby="kleides-mfa-alternate-methods">
         {% for plugin, device in user_devices %}
-        <a class="dropdown-item" href="{% url 'kleides_mfa:verify' plugin.slug device.pk %}?next={{ next }}">{{ device.name }}</a>
+        <a class="dropdown-item" href="{% url 'kleides_mfa:verify' plugin.slug device.pk %}?next={{ next|urlencode }}">{{ device.name }}</a>
         {% endfor %}
       </div>
     </div>

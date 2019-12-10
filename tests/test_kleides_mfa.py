@@ -154,8 +154,16 @@ class KleidesMfaTestCase(TestCase):
 
         # Unless the user came here with a next parameter.
         response = self.login(
-            user, login_url='/login/?next=/some/place/',
-            redirect_to=verify_url + '/some/place/')
+            user, login_url='/login/?next=/some/place/%3Fwith%3Dparams',
+            redirect_to=verify_url + '/some/place/%3Fwith%3Dparams')
+
+        # The next parameter is properly escaped in the template for the device
+        # selection links.
+        self.assertContains(response, 'Other methods')
+        self.assertContains(
+            response, verify_url + '/some/place/%3Fwith%3Dparams')
+        self.assertNotContains(
+            response, verify_url + '/some/place/?with=params')
 
     def test_plugin(self):
         # Plugins are allowed to use the same device/model.
