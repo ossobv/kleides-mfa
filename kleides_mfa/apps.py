@@ -4,7 +4,7 @@ from __future__ import absolute_import, unicode_literals
 from django.apps import AppConfig, apps
 from django.contrib.auth import get_user_model
 from django.db.models.signals import post_migrate
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 
 def is_authenticated(user):

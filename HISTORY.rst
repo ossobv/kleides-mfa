@@ -2,6 +2,12 @@
 History
 =======
 
+Unreleased
+----------
+
+* Replace deprecated Django-3.0 functions.
+
+
 0.1.8 (2019-12-10)
 ------------------
 

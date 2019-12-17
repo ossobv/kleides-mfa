@@ -7,7 +7,7 @@ from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import resolve_url
 from django.urls import reverse
 from django.utils import timezone
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 from django.utils.http import urlencode
 
 from .mixins import (
@@ -94,5 +94,5 @@ class DeviceVerifyView(UnverifiedUserMixin, PluginMixin, DjangoLoginView):
         if hasattr(user, 'get_session_auth_hash'):
             del self.request.session[HASH_SESSION_KEY]
         # Add the last verification time to the session.
-        self.request.session[VERIFIED_SESSION_KEY] = force_text(timezone.now())
+        self.request.session[VERIFIED_SESSION_KEY] = force_str(timezone.now())
         return HttpResponseRedirect(self.get_success_url())

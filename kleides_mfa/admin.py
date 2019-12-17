@@ -5,7 +5,11 @@ from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.contrib.auth.views import redirect_to_login
 from django.shortcuts import resolve_url
-from django.utils.http import is_safe_url
+try:
+    from django.utils.http import url_has_allowed_host_and_scheme
+except ImportError:  # Django 2.2
+    from django.utils.http import (
+        is_safe_url as url_has_allowed_host_and_scheme)
 
 
 class AdminSiteMfaRequiredMixin():
@@ -33,13 +37,13 @@ class AdminSiteMfaRequiredMixin():
             REDIRECT_FIELD_NAME,
             request.GET.get(REDIRECT_FIELD_NAME, '')
         )
-        url_is_safe = is_safe_url(
+        url_is_allowed = url_has_allowed_host_and_scheme(
             url=redirect_to,
             allowed_hosts={request.get_host()},
             require_https=request.is_secure(),
         )
 
-        if not redirect_to or not url_is_safe:
+        if not redirect_to or not url_is_allowed:
             redirect_to = resolve_url(settings.LOGIN_REDIRECT_URL)
 
         return redirect_to_login(redirect_to)
