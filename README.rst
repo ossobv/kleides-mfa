@@ -26,7 +26,7 @@ Currently supported plugins are:
 .. _django-otp-yubikey: https://github.com/django-otp/django-otp-yubikey
 .. _django-otp-u2f: https://github.com/ossobv/django-otp-u2f
 
-.. image:: assets/interface.png?raw=true
+.. image:: assets/interface-w-bg.png?raw=true
     :alt: Overview of Kleides MFA authentication method interface.
 
 * Free software: GNU General Public License v3
