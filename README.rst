@@ -1,6 +1,6 @@
-===================================
-Kleides Multi Factor Authentication
-===================================
+=============================================
+|KLEIDES| Kleides Multi Factor Authentication
+=============================================
 
 .. image:: https://img.shields.io/pypi/v/kleides_mfa.svg
         :target: https://pypi.python.org/pypi/kleides_mfa
@@ -90,3 +90,7 @@ In short for devices using django-otp:
   form in the apps ready.
 * Device registration should be contained in the `create_form_class`.
 * Device verification should be contained in the `verify_form_class`.
+
+
+.. |KLEIDES| image:: assets/kleides-icon.png
+    :alt: Kleides
