@@ -89,10 +89,14 @@ class DeviceVerifyView(UnverifiedUserMixin, PluginMixin, DjangoLoginView):
         # Perform django session login.
         login(self.request, user, self.request.session[BACKEND_SESSION_KEY])
         # Cleanup kleides_mfa session data.
-        del self.request.session[SESSION_KEY]
-        del self.request.session[BACKEND_SESSION_KEY]
-        if hasattr(user, 'get_session_auth_hash'):
-            del self.request.session[HASH_SESSION_KEY]
+        try:
+            del self.request.session[SESSION_KEY]
+            del self.request.session[BACKEND_SESSION_KEY]
+            if hasattr(user, 'get_session_auth_hash'):
+                del self.request.session[HASH_SESSION_KEY]
+        except KeyError:
+            # Login can flush the session if it belonged to another user.
+            pass
         # Add the last verification time to the session.
         self.request.session[VERIFIED_SESSION_KEY] = force_str(timezone.now())
         return HttpResponseRedirect(self.get_success_url())

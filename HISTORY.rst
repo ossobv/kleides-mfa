@@ -2,10 +2,11 @@
 History
 =======
 
-Unreleased
-----------
+0.1.9 (2020-04-15)
+------------------
 
 * Replace deprecated Django-3.0 functions.
+* Fix session cleanup after login as different user.
 
 
 0.1.8 (2019-12-10)

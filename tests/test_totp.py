@@ -15,8 +15,8 @@ from .factories import UserFactory
 
 
 class DjangoOtpTotpTestCase(TestCase):
-    def totp_from_form(self, form):
-        url = urlsplit(form.instance.config_url)
+    def totp_from_device(self, device):
+        url = urlsplit(device.config_url)
         params = parse_qs(url.query)
         return TOTP(
             b32decode(params['secret'][0]),
@@ -47,7 +47,7 @@ class DjangoOtpTotpTestCase(TestCase):
 
         # User takes the TOTP config and applies it to his device.
         response = self.client.get('/totp/create/')
-        totp = self.totp_from_form(response.context['form'])
+        totp = self.totp_from_device(response.context['form'].instance)
 
         # Confirm the user can generate tokens and the device is configured.
         registration_token = totp.token()
@@ -112,7 +112,7 @@ class DjangoOtpTotpTestCase(TestCase):
         self.login(user)
 
         response = self.client.get('/totp/create/')
-        totp = self.totp_from_form(response.context['form'])
+        totp = self.totp_from_device(response.context['form'].instance)
         totp.drift = 1
         response = self.client.post(
             '/totp/create/', {'otp_token': totp.token()})
@@ -120,3 +120,29 @@ class DjangoOtpTotpTestCase(TestCase):
         device = user.totpdevice_set.get()
         self.assertTrue(device.confirmed)
         self.assertEqual(device.drift, 0)
+
+    def test_totp_after_different_user(self):
+        user = UserFactory()
+        self.login(user)
+        session = self.client.session
+        session['secrets'] = 'yes'
+        session.save()
+
+        user = UserFactory()
+        device = user.totpdevice_set.create(name='test')
+        totp = self.totp_from_device(device)
+
+        verify_url = '/totp/verify/{}/'.format(device.pk)
+        response = self.login(user, '{}?next=/list/'.format(verify_url))
+
+        self.assertEqual(self.client.session['secrets'], 'yes')
+
+        response = self.client.post(
+            verify_url, {'otp_token': totp.token()}, follow=True)
+        self.assertRedirects(response, '/list/')
+
+        context_user = response.context['user']
+        self.assertTrue(context_user.is_authenticated)
+        self.assertTrue(context_user.is_verified)
+        with self.assertRaises(KeyError):
+            self.client.session['secrets']
