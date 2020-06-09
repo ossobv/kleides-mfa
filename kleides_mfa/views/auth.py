@@ -55,9 +55,29 @@ class LoginView(DjangoLoginView):
 class DeviceVerifyView(UnverifiedUserMixin, PluginMixin, DjangoLoginView):
     template_name_suffix = '_verify_form'
 
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        return super().get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        return super().post(request, *args, **kwargs)
+
+    def dispatch(self, request, *args, **kwargs):
+        try:
+            return super().dispatch(request, *args, **kwargs)
+        except self.plugin.model.DoesNotExist:
+            # A user tried to access a device that no longer exists or belongs
+            # to another user. Flush the session and restart authentication.
+            request.session.flush()
+            redirect_url = reverse('kleides_mfa:login')
+            params = urlencode(
+                {self.redirect_field_name: self.get_success_url()})
+            return HttpResponseRedirect('{}?{}'.format(redirect_url, params))
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['device'] = self.get_object()
+        context['device'] = self.object
         context['user_devices'] = registry.user_devices_with_plugin(
             self.unverified_user, confirmed=True)
         context['unverified_user'] = self.unverified_user
@@ -66,7 +86,7 @@ class DeviceVerifyView(UnverifiedUserMixin, PluginMixin, DjangoLoginView):
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs['unverified_user'] = self.unverified_user
-        kwargs['device'] = self.get_object()
+        kwargs['device'] = self.object
         return kwargs
 
     def get_form_class(self):

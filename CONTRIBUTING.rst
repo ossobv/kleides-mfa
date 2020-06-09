@@ -125,4 +125,7 @@ $ bump2version patch # possible: major / minor / patch
 $ git push
 $ git push --tags
 
-Travis will then deploy to PyPI if tests pass.
+Upload to PyPI if CI tests pass.::
+
+$ python setup.py sdist bdist_wheel
+$ python -m twine upload dist/kleides_mfa-<VERSION>*

@@ -11,6 +11,7 @@ from django_otp.plugins.otp_totp.models import TOTPDevice
 from kleides_mfa import settings as mfa_settings
 from kleides_mfa.forms import DeviceUpdateForm
 from kleides_mfa.registry import AlreadyRegistered, registry
+from kleides_mfa.views.mixins import SESSION_KEY
 
 from .factories import UserFactory
 
@@ -164,6 +165,22 @@ class KleidesMfaTestCase(TestCase):
             response, verify_url + '/some/place/%3Fwith%3Dparams')
         self.assertNotContains(
             response, verify_url + '/some/place/?with=params')
+
+    def test_recovery_from_bad_device(self):
+        # Restart authentication if a device goes missing. (deletion etc)
+        user = UserFactory()
+        device = user.totpdevice_set.create(name='test')
+        verify_url = '/totp/verify/{}/?next='.format(device.pk)
+        response = self.login(
+            user, login_url='/login/?next=/some/place/%3Fwith%3Dparams',
+            redirect_to=verify_url + '/some/place/%3Fwith%3Dparams')
+
+        device.delete()
+        response = self.client.get(verify_url + '/some/place/%3Fwith%3Dparams')
+        self.assertRedirects(
+            response, '/login/?next=/some/place/%3Fwith%3Dparams')
+        # session is invalid and has been flushed.
+        self.assertNotIn(SESSION_KEY, self.client.session)
 
     def test_plugin(self):
         # Plugins are allowed to use the same device/model.

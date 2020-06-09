@@ -2,6 +2,12 @@
 History
 =======
 
+0.1.10 (2020-06-09)
+------------------
+
+* Restart authentication when accessing a bad device.
+
+
 0.1.9 (2020-04-15)
 ------------------
 
