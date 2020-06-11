@@ -2,6 +2,12 @@
 History
 =======
 
+0.1.11 (2020-06-11)
+-------------------
+
+* Fix unset plugin attribute on PermissionDeniedError.
+
+
 0.1.10 (2020-06-09)
 -------------------
 
