@@ -66,7 +66,7 @@ class DeviceVerifyView(UnverifiedUserMixin, PluginMixin, DjangoLoginView):
     def dispatch(self, request, *args, **kwargs):
         try:
             return super().dispatch(request, *args, **kwargs)
-        except self.plugin.model.DoesNotExist:
+        except self.get_plugin().model.DoesNotExist:
             # A user tried to access a device that no longer exists or belongs
             # to another user. Flush the session and restart authentication.
             request.session.flush()

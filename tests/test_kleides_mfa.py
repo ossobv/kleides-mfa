@@ -182,6 +182,15 @@ class KleidesMfaTestCase(TestCase):
         # session is invalid and has been flushed.
         self.assertNotIn(SESSION_KEY, self.client.session)
 
+    def test_verify_permission_error(self):
+        user = UserFactory()
+        device = user.totpdevice_set.create(name='test')
+        self.login_with_mfa(user)
+        verify_url = '/totp/verify/{}/?next='.format(device.pk)
+        # It is not allowed to access a verification device after verification.
+        response = self.client.get(verify_url)
+        self.assertEqual(response.status_code, 403)
+
     def test_plugin(self):
         # Plugins are allowed to use the same device/model.
         totp_plugin = registry.get_plugin('totp')
