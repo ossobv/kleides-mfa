@@ -50,18 +50,17 @@ class KleidesMfaConfig(AppConfig):
         from . import settings
         from .registry import registry
 
-        if settings.PATCH_USER:
-            # Monkey patch user authentication properties.
-            User = get_user_model()
-            User.is_verified = property(is_verified)
-            User.is_authenticated = property(is_authenticated)
-            User.is_single_factor_authenticated = property(
-                is_single_factor_authenticated)
-            from django.contrib.auth.models import AnonymousUser
-            AnonymousUser.is_verified = property(is_verified)
-            AnonymousUser.is_authenticated = property(is_authenticated)
-            AnonymousUser.is_single_factor_authenticated = property(
-                is_single_factor_authenticated)
+        # Monkey patch user authentication properties.
+        User = get_user_model()
+        User.is_verified = property(is_verified)
+        User.is_authenticated = property(is_authenticated)
+        User.is_single_factor_authenticated = property(
+            is_single_factor_authenticated)
+        from django.contrib.auth.models import AnonymousUser
+        AnonymousUser.is_verified = property(is_verified)
+        AnonymousUser.is_authenticated = property(is_authenticated)
+        AnonymousUser.is_single_factor_authenticated = property(
+            is_single_factor_authenticated)
 
         # Check if known devices are installed and register them as plugins.
         if apps.is_installed('django_otp.plugins.otp_totp'):
@@ -100,7 +99,8 @@ class KleidesMfaConfig(AppConfig):
                 create_yubikey_validationservice,
                 dispatch_uid='kleides_mfa.apps.KleidesMfaConfig')
 
-        if apps.is_installed('django.contrib.admin') and settings.PATCH_ADMIN:
+        if (apps.is_installed('django.contrib.admin')
+                and settings.PATCH_ADMIN):  # pragma: no branch
             from django.contrib import admin
             from .admin import AdminSiteMfaRequiredMixin
             MfaAdminSite = type(

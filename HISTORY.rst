@@ -6,6 +6,7 @@ History
 -------------------
 
 * Remove future statements.
+* Remove non-optional PATCH_USER setting.
 
 
 0.1.11 (2020-06-11)
