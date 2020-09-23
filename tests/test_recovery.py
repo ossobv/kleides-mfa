@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from kleides_mfa.registry import registry
 
@@ -15,6 +15,7 @@ class DjangoOtpRecoveryTestCase(TestCase):
         self.assertRedirects(response, redirect_to)
         return response
 
+    @override_settings(OTP_STATIC_THROTTLE_FACTOR=0)
     def test_recovery(self):
         user = UserFactory()
         response = self.login(user)
@@ -35,6 +36,13 @@ class DjangoOtpRecoveryTestCase(TestCase):
 
         context_user = response.context['user']
         self.assertTrue(context_user.is_anonymous)
+
+        # Try a faulty code with a unicode BOM.
+        response = self.client.post(
+            device_url, {'otp_token': '\ufeffxxx'}, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response, 'The token is not valid for this device.')
 
         # Continue authentication using recovery code.
         token = device.token_set.first()
