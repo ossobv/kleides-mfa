@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import, unicode_literals
-
 from django.conf import settings
 from django.contrib.auth import get_user_model, load_backend
 from django.contrib.auth.mixins import UserPassesTestMixin

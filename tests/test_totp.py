@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import, unicode_literals
-
 from base64 import b32decode
 from urllib.parse import parse_qs, urlsplit
 

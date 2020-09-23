@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import, unicode_literals
-
 # kleides-mfa test project
 from os.path import abspath, dirname, join
 

@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import, unicode_literals
-
 from django.conf import settings
 from django.shortcuts import resolve_url
 from django.test import TestCase

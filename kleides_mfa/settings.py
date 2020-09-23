@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import, unicode_literals
-
 from django.conf import settings
 
 # The sorting order of the plugins on the mfa listing using the plugin.slug.
