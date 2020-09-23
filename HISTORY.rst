@@ -5,6 +5,7 @@ History
 0.1.12 (2020-09-23)
 -------------------
 
+* Add python 3.8 and Django 3.1 to support matrix.
 * Test unprintable token input.
 * Remove future statements.
 * Remove non-optional PATCH_USER setting.
