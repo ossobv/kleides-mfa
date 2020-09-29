@@ -2,6 +2,13 @@
 History
 =======
 
+0.1.13 (2020-09-29)
+-------------------
+
+* Send user_login_failed signal on device failures.
+* Test Django login signals with Kleides MFA.
+
+
 0.1.12 (2020-09-23)
 -------------------
 

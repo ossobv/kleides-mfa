@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from django.contrib.auth import login
+from django.contrib.auth.signals import user_login_failed
 from django.contrib.auth.views import LoginView as DjangoLoginView
 from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import resolve_url
@@ -118,3 +119,13 @@ class DeviceVerifyView(UnverifiedUserMixin, PluginMixin, DjangoLoginView):
         # Add the last verification time to the session.
         self.request.session[VERIFIED_SESSION_KEY] = force_str(timezone.now())
         return HttpResponseRedirect(self.get_success_url())
+
+    def form_invalid(self, form):
+        # The device verification failed, fire login_failed signal like Django
+        # does on failed autentication attempts against all backends.
+        # Token will be excluded from credentials so just provide an empty
+        # dictionary and log the user and device that were protected.
+        user_login_failed.send(
+            sender=__name__, credentials={}, request=self.request,
+            user=self.unverified_user, device=self.object)
+        return super().form_invalid(form)

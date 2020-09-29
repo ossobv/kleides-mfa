@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
+from unittest import mock
+
 from django.conf import settings
+from django.contrib.auth.signals import user_logged_in, user_login_failed
 from django.shortcuts import resolve_url
 from django.test import TestCase
 
@@ -12,6 +15,7 @@ from kleides_mfa.registry import AlreadyRegistered, registry
 from kleides_mfa.views.mixins import SESSION_KEY
 
 from .factories import UserFactory
+from .utils import handle_signal
 
 
 class KleidesMfaTestCase(TestCase):
@@ -41,8 +45,13 @@ class KleidesMfaTestCase(TestCase):
         session.save()
 
     def test_login_failure(self):
-        response = self.client.post(
-            '/login/', {'username': 'test2', 'password': 'test1234'})
+        with handle_signal(user_login_failed) as handler:
+            response = self.client.post(
+                '/login/', {'username': 'test2', 'password': 'test1234'})
+            handler.assert_called_once_with(
+                credentials={
+                    'username': 'test2', 'password': '********************'},
+                sender=mock.ANY, request=mock.ANY, signal=user_login_failed)
         self.assertContains(
             response, 'Please enter a correct username and password.')
 
@@ -51,7 +60,14 @@ class KleidesMfaTestCase(TestCase):
         # list of available authentication methods as well as add a device.
         # The user cannot do anything else without 2 step authentication.
         user = UserFactory()
-        response = self.login(user)
+        with handle_signal(user_logged_in) as handler:
+            response = self.login(user)
+            handler.assert_called_once_with(
+                user=user, sender=mock.ANY, request=mock.ANY,
+                signal=user_logged_in)
+            authenticated_user = handler.call_args[1]['user']
+            self.assertIsNone(
+                registry.user_authentication_method(authenticated_user))
         self.assertContains(
             response, 'These are your 2 step authentication methods.')
         self.assertFalse(registry.user_has_device(user))
@@ -66,8 +82,15 @@ class KleidesMfaTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
 
         # Force 2 step login setup.
-        self.login_with_mfa(user)
-        self.assertTrue(registry.user_has_device(user))
+        with handle_signal(user_logged_in) as handler:
+            self.login_with_mfa(user)
+            handler.assert_called_once_with(
+                user=user, sender=mock.ANY, request=mock.ANY,
+                signal=user_logged_in)
+            authenticated_user = handler.call_args[1]['user']
+            self.assertEqual(
+                registry.user_authentication_method(authenticated_user),
+                'totp')
 
         response = self.client.get('/list/')
 

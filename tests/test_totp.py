@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 from base64 import b32decode
+from unittest import mock
 from urllib.parse import parse_qs, urlsplit
 
+from django.contrib.auth.signals import user_logged_in, user_login_failed
 from django.test import TestCase
 from django.test.utils import override_settings
 
@@ -10,6 +12,7 @@ from django_otp.oath import TOTP
 from kleides_mfa.registry import registry
 
 from .factories import UserFactory
+from .utils import handle_signal
 
 
 class DjangoOtpTotpTestCase(TestCase):
@@ -80,15 +83,23 @@ class DjangoOtpTotpTestCase(TestCase):
             response, '/login/?next=/totp/delete/{}/'.format(device.pk))
 
         # Token reuse is not allowed so the registration is no longer valid.
-        response = self.client.post(
-            verify_url, {'otp_token': registration_token})
+        with handle_signal(user_login_failed) as handler:
+            response = self.client.post(
+                verify_url, {'otp_token': registration_token})
+            handler.assert_called_once_with(
+                credentials={}, user=user, device=device,
+                sender=mock.ANY, request=mock.ANY, signal=user_login_failed)
         self.assertContains(
             response, 'The token is not valid for this device.')
 
         # Default tolerance is 1, increase drift to force next token.
         totp.drift = 1
-        response = self.client.post(
-            verify_url, {'otp_token': totp.token()}, follow=True)
+        with handle_signal(user_logged_in) as handler:
+            response = self.client.post(
+                verify_url, {'otp_token': totp.token()}, follow=True)
+            handler.assert_called_once_with(
+                user=user, sender=mock.ANY, request=mock.ANY,
+                signal=user_logged_in)
         self.assertRedirects(response, '/list/')
 
         context_user = response.context['user']
