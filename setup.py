@@ -47,6 +47,6 @@ setup(
     keywords='kleides_mfa',
     name='kleides_mfa',
     packages=find_packages(include=['kleides_mfa', 'kleides_mfa.*']),
-    version='0.1.13',
+    version='0.1.14',
     zip_safe=False,
 )
