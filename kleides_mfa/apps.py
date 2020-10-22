@@ -30,14 +30,14 @@ def is_single_factor_authenticated(user):
     return bool(not user.is_anonymous)
 
 
-def create_yubikey_validationservice(app_config, **kwargs):
+def create_yubikey_validationservice(app_config, using='default', **kwargs):
     '''
     Make sure at least one ValidationService exists.
     '''
     from otp_yubikey.models import ValidationService
     if (app_config.label == 'otp_yubikey'
-            and ValidationService.objects.all().count() == 0):
-        ValidationService.objects.get_or_create(defaults={
+            and ValidationService.objects.using(using).all().count() == 0):
+        ValidationService.objects.using(using).get_or_create(defaults={
             'name': 'YubiCloud', 'use_ssl': True,
             'param_sl': '', 'param_timeout': ''})
 

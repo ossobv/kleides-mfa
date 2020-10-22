@@ -2,6 +2,12 @@
 History
 =======
 
+0.1.14 (2020-10-22)
+-------------------
+
+* Configure ValidationService on the database that is being migrated.
+
+
 0.1.13 (2020-09-29)
 -------------------
 
