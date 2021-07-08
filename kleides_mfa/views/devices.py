@@ -8,11 +8,10 @@ from django_otp import DEVICE_ID_SESSION_KEY, login as django_otp_login
 
 from ..registry import registry
 from .mixins import (
-    MultiFactorRequiredMixin, PluginMixin, SetupOrMFARequiredMixin,
-    SingleFactorRequiredMixin)
+    MultiFactorRequiredMixin, PluginMixin, SetupOrMFARequiredMixin)
 
 
-class DeviceListView(SingleFactorRequiredMixin, TemplateView):
+class DeviceListView(SetupOrMFARequiredMixin, TemplateView):
     template_name = 'kleides_mfa/plugin_list.html'
 
     def get_context_data(self, **kwargs):
