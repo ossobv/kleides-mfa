@@ -26,7 +26,7 @@ Currently supported plugins are:
 .. _django-otp-yubikey: https://github.com/django-otp/django-otp-yubikey
 .. _django-otp-u2f: https://github.com/ossobv/django-otp-u2f
 
-.. image:: assets/interface-w-bg.png?raw=true
+.. image:: assets/interface-w-bg.png
     :alt: Overview of Kleides MFA authentication method interface.
 
 * Free software: GNU General Public License v3
@@ -80,7 +80,7 @@ Extending Kleides MFA
 ---------------------
 
 You can add or replace authentication methods using the
-:class:`~kleides_mfa.registry.KleidesMfaPluginRegistry`. Documentation
+`kleides_mfa.registry.KleidesMfaPluginRegistry`. Documentation
 is currently lacking but you can check the implementation of currently
 supported django-otp plugins to get a basic idea.
 

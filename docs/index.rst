@@ -1,5 +1,5 @@
 Welcome to Kleides Multi Factor Authentication's documentation!
-======================================
+===============================================================
 
 .. toctree::
    :maxdepth: 2

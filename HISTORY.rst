@@ -2,6 +2,20 @@
 History
 =======
 
+
+0.1.15 (2021-07-13)
+-------------------
+
+* Prevent single factor access to device list when multi factor is
+  available.
+* Switch to setuptools_scm for automatic git versioning.
+* Move package data to setup.cfg.
+* Add Python 3.9 and Django 3.2 to the support matrix.
+* Remove Python 3.5 and Django 3.0 which are end of life.
+* Move test dependencies to the kleides-mfa[test] extra.
+* Switch to PEP517 package builder.
+
+
 0.1.14 (2020-10-22)
 -------------------
 

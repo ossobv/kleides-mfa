@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from binascii import unhexlify
+from unittest.mock import patch
 
 from django.test import TestCase
-from mock import patch
 from yubiotp.otp import YubiKey
 from otp_yubikey.models import (
     RemoteYubikeyDevice, ValidationService, default_id)
