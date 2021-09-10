@@ -3,6 +3,12 @@ History
 =======
 
 
+0.1.16 (2021-09-10)
+-------------------
+
+* Update bootstrap, jquery and popper script tags.
+
+
 0.1.15 (2021-07-13)
 -------------------
 
