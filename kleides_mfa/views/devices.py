@@ -7,6 +7,7 @@ from django.views.generic import (
 from django_otp import DEVICE_ID_SESSION_KEY, login as django_otp_login
 
 from ..registry import registry
+from ..signals import mfa_added, mfa_removed
 from .mixins import (
     MultiFactorRequiredMixin, PluginMixin, SetupOrMFARequiredMixin)
 
@@ -22,7 +23,6 @@ class DeviceListView(SetupOrMFARequiredMixin, TemplateView):
 
 
 class DeviceCreateView(SetupOrMFARequiredMixin, PluginMixin, CreateView):
-    # XXX notification via email ?
     template_name_suffix = '_create_form'
 
     def get_form_class(self):
@@ -39,6 +39,8 @@ class DeviceCreateView(SetupOrMFARequiredMixin, PluginMixin, CreateView):
             django_otp_login(self.request, self.object)
         messages.success(
             self.request, self.plugin.get_create_message(self.object))
+        mfa_added.send(
+            sender=__name__, instance=self.object, request=self.request)
         return response
 
 
@@ -53,11 +55,14 @@ class DeviceUpdateView(MultiFactorRequiredMixin, PluginMixin, UpdateView):
 
 
 class DeviceDeleteView(MultiFactorRequiredMixin, PluginMixin, DeleteView):
-    # XXX notification via email ?
-    # XXX password confirmation ?
-    def delete(self, request, *args, **kwargs):
-        message = self.plugin.get_delete_message(self.get_object())
-        response = super().delete(request, *args, **kwargs)
+    def get_form_class(self):
+        return self.plugin.get_delete_form_class()
+
+    def post(self, request, *args, **kwargs):
+        obj = self.get_object()
+        mfa_removed.send(sender=__name__, instance=obj, request=request)
+        message = self.plugin.get_delete_message(obj)
+        response = super().post(request, *args, **kwargs)
         messages.warning(request, message)
         # User has removed all authentication methods, disable his access.
         if not registry.user_has_device(self.request.user, confirmed=True):

@@ -3,6 +3,7 @@
 <div class='position-relative'>
 <a class="btn btn-primary float-right" href="{% url 'kleides_mfa:create' plugin.slug %}">{% blocktrans with name=plugin.name %}Add {{ name }}{% endblocktrans %}</a>
 <h2>{{ plugin.name }}</h2>
+<div class="table-responsive">
 <table id="device-list" class="table table-striped">
     <thead>
         <tr>
@@ -26,4 +27,5 @@
     {% endfor %}
     </tbody>
 </table>
+</div>
 </div>

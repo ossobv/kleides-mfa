@@ -104,6 +104,10 @@ class DeviceUpdateForm(BaseDeviceForm):
     pass
 
 
+class DeviceDeleteForm(BaseDeviceForm):
+    pass
+
+
 class TOTPDeviceCreateForm(DeviceCreateForm):
     otp_token = forms.CharField(label=_('Token'))
 

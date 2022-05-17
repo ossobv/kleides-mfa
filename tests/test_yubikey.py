@@ -7,7 +7,6 @@ from yubiotp.otp import YubiKey
 from otp_yubikey.models import (
     RemoteYubikeyDevice, ValidationService, default_id)
 
-from kleides_mfa.forms import YubikeyDeviceCreateForm
 from kleides_mfa.registry import registry
 
 from .factories import UserFactory

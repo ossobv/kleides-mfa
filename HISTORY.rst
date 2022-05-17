@@ -2,6 +2,14 @@
 History
 =======
 
+0.1.17 (2022-05-17)
+-------------------
+
+* Add signals to act on adding/removing MFA devices.
+* Fix compatibility with Django-4.0.
+* Update test matrix for supported releases only.
+* Make device table responsive.
+
 
 0.1.16 (2021-09-10)
 -------------------

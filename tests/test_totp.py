@@ -10,6 +10,7 @@ from django.test.utils import override_settings
 from django_otp.oath import TOTP
 
 from kleides_mfa.registry import registry
+from kleides_mfa.signals import mfa_added, mfa_removed
 
 from .factories import UserFactory
 from .utils import handle_signal
@@ -52,10 +53,15 @@ class DjangoOtpTotpTestCase(TestCase):
 
         # Confirm the user can generate tokens and the device is configured.
         registration_token = totp.token()
-        response = self.client.post(
-            '/totp/create/', {
-                'otp_token': registration_token, 'name': 'My Phone'})
+        with handle_signal(mfa_added) as handler:
+            response = self.client.post(
+                '/totp/create/', {
+                    'otp_token': registration_token, 'name': 'My Phone'})
+            handler.assert_called_once_with(
+                instance=mock.ANY, sender=mock.ANY, request=mock.ANY,
+                signal=mfa_added)
         self.assertRedirects(response, '/list/')
+
         device = user.totpdevice_set.get()
         self.assertTrue(device.confirmed)
         self.assertEqual(device.name, 'My Phone')
@@ -110,8 +116,12 @@ class DjangoOtpTotpTestCase(TestCase):
         self.assertEqual(
             registry.user_authentication_method(context_user), 'totp')
 
-        response = self.client.post(
-            '/totp/delete/{}/'.format(device.pk), follow=True)
+        with handle_signal(mfa_removed) as handler:
+            response = self.client.post(
+                '/totp/delete/{}/'.format(device.pk), follow=True)
+            handler.assert_called_once_with(
+                  instance=device, sender=mock.ANY, request=mock.ANY,
+                  signal=mfa_removed)
         self.assertContains(
             response, 'The TOTP &quot;Acme ID&quot; was deleted successfully.')
 

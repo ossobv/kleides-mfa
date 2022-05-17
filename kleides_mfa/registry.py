@@ -5,7 +5,7 @@ from django.forms import modelform_factory
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 
-from .forms import DeviceUpdateForm
+from .forms import DeviceDeleteForm, DeviceUpdateForm
 from .settings import PLUGIN_PRIORITY
 
 __all__ = ['registry']
@@ -20,15 +20,16 @@ class AlreadyRegistered(Exception):
 
 class KleidesMfaPlugin():
     def __init__(
-            self, name, model, create_form_class=None, update_form_class=None,
-            verify_form_class=None, show_create_button=True,
-            create_message=None, update_message=None, delete_message=None,
-            show_verify_button=True, device_list_javascript=None,
-            device_list_template=None):
+            self, name, model, create_form_class=None, delete_form_class=None,
+            update_form_class=None, verify_form_class=None,
+            show_create_button=True, create_message=None, update_message=None,
+            delete_message=None, show_verify_button=True,
+            device_list_javascript=None, device_list_template=None):
         self.slug = slugify(name)
         self.name = name
         self.model = model
         self.create_form_class = create_form_class
+        self.delete_form_class = delete_form_class
         self.update_form_class = update_form_class
         self.verify_form_class = verify_form_class
         self.create_message = create_message
@@ -48,6 +49,12 @@ class KleidesMfaPlugin():
 
     def get_create_form_class(self):
         return self.create_form_class
+
+    def get_delete_form_class(self):
+        if self.delete_form_class is None:
+            return modelform_factory(
+                self.model, form=DeviceDeleteForm, fields=())
+        return self.delete_form_class
 
     def get_update_form_class(self):
         if self.update_form_class is None:

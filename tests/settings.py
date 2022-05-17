@@ -71,6 +71,8 @@ TEMPLATES = [
 
 SECRET_KEY = 'XXX'
 
+USE_TZ = True
+
 ROOT_URLCONF = 'tests.urls'
 
 OTP_TOTP_ISSUER = 'Kleides MFA'
