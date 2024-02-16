@@ -2,6 +2,8 @@
 # kleides-mfa test project
 from os.path import abspath, dirname, join
 
+import django
+
 
 def project_path(path):
     return abspath(join(dirname(__file__), path))
@@ -50,6 +52,11 @@ MIDDLEWARE = [
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
+
+if django.VERSION >= (4, 1):
+    FORM_RENDERER = 'django.forms.renderers.DjangoDivFormRenderer'
+else:
+    FORM_RENDERER = 'django.forms.renderers.DjangoTemplates'
 
 TEMPLATES = [
     {
