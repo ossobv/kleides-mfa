@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.apps import AppConfig, apps
 from django.contrib.auth import get_user_model
+from django.db import router
 from django.db.models.signals import post_migrate
 from django.utils.translation import gettext_lazy as _
 
@@ -35,6 +36,9 @@ def create_yubikey_validationservice(app_config, using='default', **kwargs):
     Make sure at least one ValidationService exists.
     '''
     from otp_yubikey.models import ValidationService
+    if not router.allow_migrate_model(using, ValidationService):
+        return
+
     if (app_config.label == 'otp_yubikey'
             and ValidationService.objects.using(using).all().count() == 0):
         ValidationService.objects.using(using).get_or_create(defaults={
