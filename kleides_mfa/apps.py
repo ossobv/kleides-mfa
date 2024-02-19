@@ -51,7 +51,7 @@ class KleidesMfaConfig(AppConfig):
     verbose_name = 'Kleides Multi Factor Authentication'
 
     def ready(self):
-        from . import settings
+        from .conf import app_settings
         from .registry import registry
 
         # Monkey patch user authentication properties.
@@ -104,7 +104,7 @@ class KleidesMfaConfig(AppConfig):
                 dispatch_uid='kleides_mfa.apps.KleidesMfaConfig')
 
         if (apps.is_installed('django.contrib.admin')
-                and settings.PATCH_ADMIN):  # pragma: no branch
+                and app_settings.KLEIDES_MFA_PATCH_ADMIN):  # pragma: no branch
             from django.contrib import admin
             from .admin import AdminSiteMfaRequiredMixin
             MfaAdminSite = type(

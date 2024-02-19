@@ -5,11 +5,12 @@ from django.conf import settings
 from django.contrib.auth.signals import user_logged_in, user_login_failed
 from django.shortcuts import resolve_url
 from django.test import TestCase
+from django.test.utils import override_settings
 
 from django_otp import DEVICE_ID_SESSION_KEY
 from django_otp.plugins.otp_totp.models import TOTPDevice
 
-from kleides_mfa import settings as mfa_settings
+from kleides_mfa.conf import app_settings
 from kleides_mfa.forms import DeviceUpdateForm
 from kleides_mfa.registry import AlreadyRegistered, registry
 from kleides_mfa.views.mixins import SESSION_KEY
@@ -165,7 +166,8 @@ class KleidesMfaTestCase(TestCase):
         user = UserFactory()
         # without a device configured the redirect url is SINGLE_FACTOR_URL.
         response = self.login(
-            user, redirect_to=resolve_url(mfa_settings.SINGLE_FACTOR_URL))
+            user, redirect_to=resolve_url(
+                app_settings.KLEIDES_MFA_SINGLE_FACTOR_URL))
 
         device = user.totpdevice_set.create(name='test')
         verify_url = '/totp/verify/{}/?next='.format(device.pk)
@@ -236,3 +238,13 @@ class KleidesMfaTestCase(TestCase):
         registry.unregister('test')
         with self.assertRaises(KeyError):
             registry.unregister('test')
+
+    @override_settings(KLEIDES_MFA_PATCH_ADMIN=False)
+    def test_app_settings(self):
+        # Override settings works on app settings.
+        self.assertFalse(app_settings.KLEIDES_MFA_PATCH_ADMIN)
+        with override_settings(KLEIDES_MFA_PATCH_ADMIN=True):
+            self.assertTrue(app_settings.KLEIDES_MFA_PATCH_ADMIN)
+        # Cannot access django settings on app settings.
+        with self.assertRaises(AttributeError):
+            app_settings.INSTALLED_APPS

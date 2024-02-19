@@ -12,7 +12,7 @@ from django.utils.http import urlencode
 from .mixins import (
     BACKEND_SESSION_KEY, HASH_SESSION_KEY, SESSION_KEY, VERIFIED_SESSION_KEY,
     PluginMixin, UnverifiedUserMixin)
-from .. import settings
+from ..conf import app_settings
 from ..registry import registry
 
 
@@ -21,7 +21,7 @@ class LoginView(DjangoLoginView):
 
     def get_success_url(self, has_device=False):
         if not has_device:
-            return resolve_url(settings.SINGLE_FACTOR_URL)
+            return resolve_url(app_settings.KLEIDES_MFA_SINGLE_FACTOR_URL)
         return super().get_success_url()
 
     def form_valid(self, form):

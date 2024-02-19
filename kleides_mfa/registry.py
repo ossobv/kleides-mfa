@@ -5,8 +5,8 @@ from django.forms import modelform_factory
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 
+from .conf import app_settings
 from .forms import DeviceDeleteForm, DeviceUpdateForm
-from .settings import PLUGIN_PRIORITY
 
 __all__ = ['registry']
 
@@ -123,7 +123,7 @@ class KleidesMfaPluginRegistry():
         '''
         Return an iterable of registered plugins in settings.PLUGIN_PRIORITY.
         '''
-        for slug in PLUGIN_PRIORITY:
+        for slug in app_settings.KLEIDES_MFA_PLUGIN_PRIORITY:
             if slug in self._registry:
                 yield self._registry[slug]
 
