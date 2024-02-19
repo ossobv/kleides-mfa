@@ -6,7 +6,6 @@ from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import resolve_url
 from django.urls import reverse
 from django.utils import timezone
-from django.utils.encoding import force_str
 from django.utils.http import urlencode
 
 from .mixins import (
@@ -52,6 +51,7 @@ class LoginView(DjangoLoginView):
 
 
 class DeviceVerifyView(UnverifiedUserMixin, PluginMixin, DjangoLoginView):
+    raise_exception = True
     template_name_suffix = '_verify_form'
 
     def get(self, request, *args, **kwargs):
@@ -117,7 +117,9 @@ class DeviceVerifyView(UnverifiedUserMixin, PluginMixin, DjangoLoginView):
             # Login can flush the session if it belonged to another user.
             pass
         # Add the last verification time to the session.
-        self.request.session[VERIFIED_SESSION_KEY] = force_str(timezone.now())
+        # Note that the verified session parameters should match the session
+        # when the first device is added in DeviceCreateView.
+        self.request.session[VERIFIED_SESSION_KEY] = timezone.now().isoformat()
         return HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self, form):

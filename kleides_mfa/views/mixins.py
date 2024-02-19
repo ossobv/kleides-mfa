@@ -1,12 +1,22 @@
 # -*- coding: utf-8 -*-
+from datetime import datetime
+
 from django.conf import settings
-from django.contrib.auth import get_user_model, load_backend
-from django.contrib.auth.mixins import UserPassesTestMixin
+from django.contrib.auth import (
+    get_user_model, load_backend, mixins as auth_mixins)
+from django.contrib.auth.views import redirect_to_login
+from django.core.exceptions import PermissionDenied
 from django.http import Http404
+from django.shortcuts import resolve_url
 from django.urls import reverse_lazy
+from django.utils import timezone
 from django.utils.crypto import constant_time_compare
 
+from urllib.parse import urlparse
+
+from ..conf import app_settings
 from ..registry import registry
+
 
 # Note that these session keys are different from django auth so the user
 # session will never pass as authenticated. Meanwhile we still need to enforce
@@ -53,6 +63,34 @@ class PluginMixin():
         ]
 
 
+class UserPassesTestMixin(auth_mixins.UserPassesTestMixin):
+    def handle_no_permission(self):
+        '''
+        Raise PermissionDenied only when raise_exception is True.
+        The original implementation also raises PermissionDenied when the user
+        is authenticated and fails the test. This mixin is used to force
+        re-authentication for users that have exceeded the VERIFIED_TIMEOUT.
+        '''
+        if self.raise_exception:
+            raise PermissionDenied(self.get_permission_denied_message())
+
+        path = self.request.build_absolute_uri()
+        resolved_login_url = resolve_url(self.get_login_url())
+        # If the login url is the same scheme and net location then use the
+        # path as the "next" url.
+        login_scheme, login_netloc = urlparse(resolved_login_url)[:2]
+        current_scheme, current_netloc = urlparse(path)[:2]
+        if (not login_scheme or login_scheme == current_scheme) and (
+            not login_netloc or login_netloc == current_netloc
+        ):
+            path = self.request.get_full_path()
+        return redirect_to_login(
+            path,
+            resolved_login_url,
+            self.get_redirect_field_name(),
+        )
+
+
 class SingleFactorRequiredMixin(UserPassesTestMixin):
     '''
     Verify that the user is authenticated with a single authentication factor.
@@ -69,18 +107,65 @@ class MultiFactorRequiredMixin(UserPassesTestMixin):
         return self.request.user.is_verified
 
 
-class SetupOrMFARequiredMixin(UserPassesTestMixin):
+def is_recently_verified(request):
     '''
-    Verify that the user is authenticated with multiple factors or with single
-    factor and is still in the process of account setup.
+    Verify that the user has recently verified with a authentication device.
+    '''
+    if request.user.is_verified:
+        if app_settings.KLEIDES_MFA_VERIFIED_TIMEOUT is None:
+            return True
+
+        try:
+            verified_on = datetime.fromisoformat(
+                request.session[VERIFIED_SESSION_KEY])
+        except (KeyError, TypeError, ValueError):
+            return False
+
+        verified_seconds = (timezone.now() - verified_on).seconds
+        if verified_seconds < app_settings.KLEIDES_MFA_VERIFIED_TIMEOUT:
+            return True
+
+    return False
+
+
+class RecentMultiFactorRequiredMixin(UserPassesTestMixin):
+    '''
+    Verify that the user has recently authenticated with multiple
+    authentication factors.
     '''
     def test_func(self):
-        user = self.request.user
-        if user.is_verified:
+        return is_recently_verified(self.request)
+
+
+def is_user_in_setup(request):
+    '''
+    Verify that the user account is in it's initial setup stage.
+    '''
+    return bool(
+        request.user.is_single_factor_authenticated
+        and not registry.user_has_device(request.user, confirmed=True))
+
+
+class SetupOrMFARequiredMixin(UserPassesTestMixin):
+    '''
+    Verify that the user is authenticated with multiple factors or
+    with single factor and is still in the process of account setup.
+    '''
+    def test_func(self):
+        if self.request.user.is_verified:
             return True
-        return (
-            user.is_single_factor_authenticated
-            and not registry.user_has_device(user, confirmed=True))
+        return is_user_in_setup(self.request)
+
+
+class SetupOrRecentMFARequiredMixin(UserPassesTestMixin):
+    '''
+    Verify that the user is authenticated with multiple factors or
+    with single factor and is still in the process of account setup.
+    '''
+    def test_func(self):
+        if is_recently_verified(self.request):
+            return True
+        return is_user_in_setup(self.request)
 
 
 class UnverifiedUserMixin(UserPassesTestMixin):

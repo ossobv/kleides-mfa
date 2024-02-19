@@ -10,6 +10,8 @@ For instance, to enable mfa on the the admin interface:
 
     KLEIDES_MFA_PATCH_ADMIN = True
 '''
+from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import Any
 
@@ -38,6 +40,11 @@ class AppSettings:
     # The default url to redirect to after login when the user has no 2 step
     # authentication devices active on the account.
     KLEIDES_MFA_SINGLE_FACTOR_URL: str = 'kleides_mfa:index'
+
+    # Amount of seconds before a user is required to verify his authenticate
+    # again to pass the recently authenticated requirement. This is can be used
+    # to protect views that modify authentication settings.
+    KLEIDES_MFA_VERIFIED_TIMEOUT: int | None = 900
 
     def __getattribute__(self, name: str) -> Any:
         '''

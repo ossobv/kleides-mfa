@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from datetime import timedelta
 from unittest import mock
 
 from django.conf import settings
@@ -6,6 +7,7 @@ from django.contrib.auth.signals import user_logged_in, user_login_failed
 from django.shortcuts import resolve_url
 from django.test import TestCase
 from django.test.utils import override_settings
+from django.utils import timezone
 
 from django_otp import DEVICE_ID_SESSION_KEY
 from django_otp.plugins.otp_totp.models import TOTPDevice
@@ -13,7 +15,7 @@ from django_otp.plugins.otp_totp.models import TOTPDevice
 from kleides_mfa.conf import app_settings
 from kleides_mfa.forms import DeviceUpdateForm
 from kleides_mfa.registry import AlreadyRegistered, registry
-from kleides_mfa.views.mixins import SESSION_KEY
+from kleides_mfa.views.mixins import SESSION_KEY, VERIFIED_SESSION_KEY
 
 from .factories import UserFactory
 from .utils import handle_signal
@@ -29,7 +31,7 @@ class KleidesMfaTestCase(TestCase):
         self.assertRedirects(response, redirect_to)
         return response
 
-    def login_with_mfa(self, user):
+    def login_with_mfa(self, user, verified_on=None):
         device = user.totpdevice_set.get_or_create(name='test')[0]
         # Force the user to login with 2 step authentication.
         # django-otp should do this if the otp_device is set.
@@ -43,6 +45,9 @@ class KleidesMfaTestCase(TestCase):
         # already exists...
         session = self.client.session
         session[DEVICE_ID_SESSION_KEY] = device.persistent_id
+        if verified_on is None:
+            verified_on = timezone.now()
+        session[VERIFIED_SESSION_KEY] = verified_on.isoformat()
         session.save()
 
     def test_login_failure(self):
@@ -148,6 +153,25 @@ class KleidesMfaTestCase(TestCase):
         self.assertTrue(context_user.is_single_factor_authenticated)
         self.assertFalse(context_user.is_authenticated)
         self.assertFalse(context_user.is_verified)
+
+    @override_settings(KLEIDES_MFA_VERIFIED_TIMEOUT=None)
+    def test_recently_verified(self):
+        user = UserFactory()
+        self.login_with_mfa(user)
+        response = self.client.get('/totp/create/')
+        self.assertEqual(response.status_code, 200)
+
+        with override_settings(KLEIDES_MFA_VERIFIED_TIMEOUT=60):
+            self.login_with_mfa(
+                user, verified_on=timezone.now() - timedelta(seconds=40))
+            response = self.client.get('/totp/create/')
+            self.assertEqual(response.status_code, 200)
+
+        with override_settings(KLEIDES_MFA_VERIFIED_TIMEOUT=60):
+            self.login_with_mfa(
+                user, verified_on=timezone.now() - timedelta(seconds=90))
+            response = self.client.get('/totp/create/')
+            self.assertRedirects(response, '/login/?next=/totp/create/')
 
     def test_secure_admin(self):
         # Users must be verified to access the admin interface.

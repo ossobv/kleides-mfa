@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.contrib import messages
 from django.http import Http404
+from django.utils import timezone
 from django.views.generic import (
     CreateView, DeleteView, TemplateView, UpdateView)
 
@@ -9,7 +10,8 @@ from django_otp import DEVICE_ID_SESSION_KEY, login as django_otp_login
 from ..registry import registry
 from ..signals import mfa_added, mfa_removed
 from .mixins import (
-    MultiFactorRequiredMixin, PluginMixin, SetupOrMFARequiredMixin)
+    VERIFIED_SESSION_KEY, PluginMixin, RecentMultiFactorRequiredMixin,
+    SetupOrMFARequiredMixin, SetupOrRecentMFARequiredMixin)
 
 
 class DeviceListView(SetupOrMFARequiredMixin, TemplateView):
@@ -22,7 +24,7 @@ class DeviceListView(SetupOrMFARequiredMixin, TemplateView):
         return context
 
 
-class DeviceCreateView(SetupOrMFARequiredMixin, PluginMixin, CreateView):
+class DeviceCreateView(SetupOrRecentMFARequiredMixin, PluginMixin, CreateView):
     template_name_suffix = '_create_form'
 
     def get_form_class(self):
@@ -37,6 +39,11 @@ class DeviceCreateView(SetupOrMFARequiredMixin, PluginMixin, CreateView):
         # This is the users first device, use it to verify the user.
         if not self.request.user.is_verified:
             django_otp_login(self.request, self.object)
+            # Add the last verification time to the session.
+            # Note that the verified session parameters should match the
+            # session when authenticating in DeviceVerifyView.
+            self.request.session[
+                VERIFIED_SESSION_KEY] = timezone.now().isoformat()
         messages.success(
             self.request, self.plugin.get_create_message(self.object))
         mfa_added.send(
@@ -44,7 +51,8 @@ class DeviceCreateView(SetupOrMFARequiredMixin, PluginMixin, CreateView):
         return response
 
 
-class DeviceUpdateView(MultiFactorRequiredMixin, PluginMixin, UpdateView):
+class DeviceUpdateView(
+        RecentMultiFactorRequiredMixin, PluginMixin, UpdateView):
     def get_form_class(self):
         return self.plugin.get_update_form_class()
 
@@ -54,7 +62,8 @@ class DeviceUpdateView(MultiFactorRequiredMixin, PluginMixin, UpdateView):
         return super().form_valid(form)
 
 
-class DeviceDeleteView(MultiFactorRequiredMixin, PluginMixin, DeleteView):
+class DeviceDeleteView(
+        RecentMultiFactorRequiredMixin, PluginMixin, DeleteView):
     def get_form_class(self):
         return self.plugin.get_delete_form_class()
 
