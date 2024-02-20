@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any
+import warnings
 
 from django.conf import settings as django_settings
 
@@ -50,10 +51,23 @@ class AppSettings:
         '''
         Check if a Django project settings should override the app default.
 
-        Only allow settings from the settings prefix
-        In order to avoid returning any random properties of the django
-        settings we the settings prefix.
+        Only allow settings from the settings prefix in order to avoid
+        returning any random properties of the django settings we the settings
+        prefix.
         '''
+        if name == 'KLEIDES_MFA_PATCH_ADMIN':
+            value = getattr(django_settings, 'KLEIDES_MFA_PATCH_ADMIN', True)
+            if value:
+                warnings.warn(
+                    'The KLEIDES_MFA_PATCH_ADMIN=True setting is deprecated. '
+                    'Use the default_site="kleides_mfa.admin.KleidesMfaAdmin" '
+                    'attribute on your project AppConfig and remove the '
+                    'django.contrib.admin app. '
+                    'Then set KLEIDES_MFA_PATCH_ADMIN to False. '
+                    'https://docs.djangoproject.com/en/5.0/ref/contrib/admin/'
+                    '#overriding-the-default-admin-site', DeprecationWarning)
+            return value
+
         if name.startswith(settings_prefix) and hasattr(django_settings, name):
             return getattr(django_settings, name)
 
