@@ -2,9 +2,11 @@ from functools import wraps
 from urllib.parse import urlparse
 
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import resolve_url
+from django.utils.translation import gettext_lazy as _
 
 from .views.mixins import is_recently_verified, is_user_in_setup
 
@@ -29,6 +31,11 @@ def user_passes_test(
 
             if raise_exception:
                 raise PermissionDenied
+
+            if request.user.is_verified:
+                messages.info(
+                    request,
+                    _('We need to confirm your identity, please login again.'))
 
             path = request.build_absolute_uri()
             resolved_login_url = resolve_url(login_url or settings.LOGIN_URL)

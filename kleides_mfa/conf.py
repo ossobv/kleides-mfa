@@ -47,6 +47,11 @@ class AppSettings:
     # to protect views that modify authentication settings.
     KLEIDES_MFA_VERIFIED_TIMEOUT: int | None = 900
 
+    # Update the verification time on every request that passes the
+    # recently_verified test to act as recent activity tracking. This prevents
+    # a forced verified timeout while the user is actively using the account.
+    KLEIDES_MFA_VERIFIED_UPDATE: bool = True
+
     def __getattribute__(self, name: str) -> Any:
         '''
         Check if a Django project settings should override the app default.

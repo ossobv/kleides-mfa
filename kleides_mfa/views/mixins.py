@@ -2,6 +2,7 @@
 from datetime import datetime
 
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth import (
     get_user_model, load_backend, mixins as auth_mixins)
 from django.contrib.auth.views import redirect_to_login
@@ -11,6 +12,7 @@ from django.shortcuts import resolve_url
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.utils.crypto import constant_time_compare
+from django.utils.translation import gettext_lazy as _
 
 from urllib.parse import urlparse
 
@@ -74,6 +76,11 @@ class UserPassesTestMixin(auth_mixins.UserPassesTestMixin):
         if self.raise_exception:
             raise PermissionDenied(self.get_permission_denied_message())
 
+        if self.request.user.is_verified:
+            messages.info(
+                self.request,
+                _('We need to confirm your identity, please login again.'))
+
         path = self.request.build_absolute_uri()
         resolved_login_url = resolve_url(self.get_login_url())
         # If the login url is the same scheme and net location then use the
@@ -123,6 +130,9 @@ def is_recently_verified(request):
 
         verified_seconds = (timezone.now() - verified_on).seconds
         if verified_seconds < app_settings.KLEIDES_MFA_VERIFIED_TIMEOUT:
+            if app_settings.KLEIDES_MFA_VERIFIED_UPDATE:
+                (request.session
+                 [VERIFIED_SESSION_KEY]) = timezone.now().isoformat()
             return True
 
     return False
