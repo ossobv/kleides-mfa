@@ -2,6 +2,16 @@
 History
 =======
 
+0.2.0 (2024-02-20)
+------------------
+
+* Deprecate KLEIDES_MFA_PATCH_ADMIN for custom AdminConfig app
+* Add decorators and mixins for recent authentication checks
+* Refactor app settings to enable override_settings
+* Include jquery qrcode javascript
+* Run ValidationService migration on routed database
+
+
 0.1.17 (2022-05-17)
 -------------------
 
