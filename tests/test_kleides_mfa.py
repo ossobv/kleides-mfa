@@ -267,7 +267,8 @@ class KleidesMfaTestCase(TestCase):
     def test_app_settings(self):
         # Override settings works on app settings.
         self.assertFalse(app_settings.KLEIDES_MFA_PATCH_ADMIN)
-        with override_settings(KLEIDES_MFA_PATCH_ADMIN=True):
+        with self.assertWarns(Warning), \
+                override_settings(KLEIDES_MFA_PATCH_ADMIN=True):
             self.assertTrue(app_settings.KLEIDES_MFA_PATCH_ADMIN)
         # Cannot access django settings on app settings.
         with self.assertRaises(AttributeError):

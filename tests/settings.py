@@ -21,7 +21,6 @@ DATABASES = {
 }
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -36,6 +35,7 @@ INSTALLED_APPS = [
     'otp_yubikey',
 
     'kleides_mfa',
+    'tests.apps.TestAdminConfig',
 ]
 
 MIDDLEWARE = [
@@ -94,3 +94,5 @@ STATIC_ROOT = project_path('../static/')
 
 LOGIN_URL = 'kleides_mfa:login'
 LOGIN_REDIRECT_URL = 'kleides_mfa:index'
+
+KLEIDES_MFA_PATCH_ADMIN = False
