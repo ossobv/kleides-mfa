@@ -2,6 +2,14 @@
 History
 =======
 
+0.2.1 (2024-03-15)
+------------------
+
+* Fix device_id url component converter
+* Update test project for warnings
+
+
+
 0.2.0 (2024-02-20)
 ------------------
 
