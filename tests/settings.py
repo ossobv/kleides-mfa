@@ -53,7 +53,7 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
 
-if django.VERSION >= (4, 1):
+if (4, 1) < django.VERSION < (5, 0):
     FORM_RENDERER = 'django.forms.renderers.DjangoDivFormRenderer'
 else:
     FORM_RENDERER = 'django.forms.renderers.DjangoTemplates'
