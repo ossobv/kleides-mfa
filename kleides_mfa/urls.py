@@ -12,12 +12,12 @@ urlpatterns = [
         '<slug:plugin>/create/', views.DeviceCreateView.as_view(),
         name='create'),
     path(
-        '<slug:plugin>/update/<path:device_id>/',
+        '<slug:plugin>/update/<int:device_id>/',
         views.DeviceUpdateView.as_view(), name='update'),
     path(
-        '<slug:plugin>/verify/<path:device_id>/',
+        '<slug:plugin>/verify/<int:device_id>/',
         views.DeviceVerifyView.as_view(), name='verify'),
     path(
-        '<slug:plugin>/delete/<path:device_id>/',
+        '<slug:plugin>/delete/<int:device_id>/',
         views.DeviceDeleteView.as_view(), name='delete'),
 ]
