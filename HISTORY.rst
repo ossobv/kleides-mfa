@@ -2,7 +2,7 @@
 History
 =======
 
-0.2.2 (unreleased)
+0.2.2 (2024-08-01)
 ------------------
 
 * Only import otp models that are installed
