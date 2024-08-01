@@ -7,8 +7,6 @@ from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
 from django_otp.oath import TOTP
-from django_otp.plugins.otp_static.models import StaticDevice, StaticToken
-from django_otp.plugins.otp_totp.models import TOTPDevice
 
 
 TOTP_SESSION_KEY = 'kleides-mfa-totp-key'
@@ -108,79 +106,88 @@ class DeviceDeleteForm(BaseDeviceForm):
     pass
 
 
-class TOTPDeviceCreateForm(DeviceCreateForm):
-    otp_token = forms.CharField(label=_('Token'))
+if apps.is_installed('django_otp.plugins.otp_totp'):  # noqa: E501 C901
+    from django_otp.plugins.otp_totp.models import TOTPDevice
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['otp_token'].widget.attrs.update({
-            'autocomplete': 'off', 'autofocus': 'autofocus'})
-        # Store the TOTP key in the session, rotate the key on unbound forms.
-        if self.is_bound and TOTP_SESSION_KEY in self.request.session:
-            self.instance.key = self.request.session[TOTP_SESSION_KEY]
-        else:
-            self.request.session[TOTP_SESSION_KEY] = self.instance.key
-        # If alternate TOTPDevice settings are needed set them here.
-        # self.instance.digits = 8  # increase token length.
-        # self.instance.tolerance = 2  # for users that are veeeeery slow.
+    class TOTPDeviceCreateForm(DeviceCreateForm):
+        otp_token = forms.CharField(label=_('Token'))
 
-    def clean(self):
-        cleaned_data = super().clean()
-        try:
-            token = int(cleaned_data.get('otp_token'))
-        except (TypeError, ValueError):
-            verified = False
-        else:
-            # django-otp setting.
-            OTP_TOTP_SYNC = getattr(settings, 'OTP_TOTP_SYNC', True)
-            # Device verification using the current instance.
-            totp = TOTP(
-                self.instance.bin_key, self.instance.step, self.instance.t0,
-                self.instance.digits, self.instance.drift)
-            totp.time = time.time()
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.fields['otp_token'].widget.attrs.update({
+                'autocomplete': 'off', 'autofocus': 'autofocus'})
+            # Store the TOTP key in the session and rotate the key on unbound
+            # forms.
+            if self.is_bound and TOTP_SESSION_KEY in self.request.session:
+                self.instance.key = self.request.session[TOTP_SESSION_KEY]
+            else:
+                self.request.session[TOTP_SESSION_KEY] = self.instance.key
+            # If alternate TOTPDevice settings are needed set them here.
+            # self.instance.digits = 8  # increase token length.
+            # self.instance.tolerance = 2  # for users that are veeeeery slow.
 
-            verified = totp.verify(
-                token, self.instance.tolerance, self.instance.last_t)
-            if verified:
-                # Device is verified, update attributes and prepare the
-                # instance to be saved.
-                self.instance.last_t = totp.t()
-                if OTP_TOTP_SYNC:
-                    self.instance.drift = totp.drift
-        if not verified:
-            raise forms.ValidationError(self.error_messages['invalid'])
-        try:
-            return cleaned_data
-        finally:
-            if TOTP_SESSION_KEY in self.request.session:  # pragma: no cover
-                del self.request.session[TOTP_SESSION_KEY]
+        def clean(self):
+            cleaned_data = super().clean()
+            try:
+                token = int(cleaned_data.get('otp_token'))
+            except (TypeError, ValueError):
+                verified = False
+            else:
+                # django-otp setting.
+                OTP_TOTP_SYNC = getattr(settings, 'OTP_TOTP_SYNC', True)
+                # Device verification using the current instance.
+                totp = TOTP(
+                    self.instance.bin_key, self.instance.step,
+                    self.instance.t0, self.instance.digits,
+                    self.instance.drift)
+                totp.time = time.time()
 
-    class Meta:
-        model = TOTPDevice
-        fields = ('name', 'otp_token',)
+                verified = totp.verify(
+                    token, self.instance.tolerance, self.instance.last_t)
+                if verified:
+                    # Device is verified, update attributes and prepare the
+                    # instance to be saved.
+                    self.instance.last_t = totp.t()
+                    if OTP_TOTP_SYNC:
+                        self.instance.drift = totp.drift
+            if not verified:
+                raise forms.ValidationError(self.error_messages['invalid'])
+            try:
+                return cleaned_data
+            finally:
+                if TOTP_SESSION_KEY in self.request.session:  # noqa: E501 pragma: no cover
+                    del self.request.session[TOTP_SESSION_KEY]
+
+        class Meta:
+            model = TOTPDevice
+            fields = ('name', 'otp_token',)
 
 
-class RecoveryDeviceForm(DeviceUpdateForm):
-    token_amount = 10
+if apps.is_installed('django_otp.plugins.otp_static'):
+    from django_otp.plugins.otp_static.models import StaticDevice, StaticToken
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        try:
-            self.instance = self.request.user.staticdevice_set.get()
-        except self.request.user.staticdevice_set.model.DoesNotExist:
-            pass
+    class RecoveryDeviceForm(DeviceUpdateForm):
+        token_amount = 10
 
-    def save(self, *args, **kwargs):
-        instance, created = self.request.user.staticdevice_set.get_or_create(
-            defaults={'name': self.plugin.name})
-        instance.token_set.all().delete()
-        for i in range(self.token_amount):
-            instance.token_set.create(token=StaticToken.random_token())
-        return instance
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            try:
+                self.instance = self.request.user.staticdevice_set.get()
+            except self.request.user.staticdevice_set.model.DoesNotExist:
+                pass
 
-    class Meta:
-        model = StaticDevice
-        fields = ()
+        def save(self, *args, **kwargs):
+            instance, created = (
+                self.request.user.staticdevice_set.get_or_create(
+                    defaults={'name': self.plugin.name}))
+            instance.token_set.all().delete()
+            for i in range(self.token_amount):
+                instance.token_set.create(token=StaticToken.random_token())
+            return instance
+
+        class Meta:
+            model = StaticDevice
+            fields = ()
 
 
 if apps.is_installed('otp_yubikey'):  # pragma: no branch
