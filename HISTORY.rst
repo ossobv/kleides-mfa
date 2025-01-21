@@ -3,7 +3,7 @@ History
 =======
 
 
-0.2.3 (unreleased)
+0.2.3 (2025-01-21)
 ------------------
 
 * Add username in credentials to the user_login_failed signal
