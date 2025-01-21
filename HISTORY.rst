@@ -2,6 +2,13 @@
 History
 =======
 
+
+0.2.3 (unreleased)
+------------------
+
+* Add username in credentials to the user_login_failed signal
+
+
 0.2.2 (2024-08-01)
 ------------------
 

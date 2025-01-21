@@ -93,8 +93,9 @@ class DjangoOtpTotpTestCase(TestCase):
             response = self.client.post(
                 verify_url, {'otp_token': registration_token})
             handler.assert_called_once_with(
-                credentials={}, user=user, device=device,
-                sender=mock.ANY, request=mock.ANY, signal=user_login_failed)
+                credentials={'username': user.username}, user=user,
+                device=device, sender=mock.ANY, request=mock.ANY,
+                signal=user_login_failed)
         self.assertContains(
             response, 'The token is not valid for this device.')
 

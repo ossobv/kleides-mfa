@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from django.contrib.auth import login
+from django.contrib.auth import get_user_model, login
 from django.contrib.auth.signals import user_login_failed
 from django.contrib.auth.views import LoginView as DjangoLoginView
 from django.http import Http404, HttpResponseRedirect
@@ -125,9 +125,12 @@ class DeviceVerifyView(UnverifiedUserMixin, PluginMixin, DjangoLoginView):
     def form_invalid(self, form):
         # The device verification failed, fire login_failed signal like Django
         # does on failed autentication attempts against all backends.
-        # Token will be excluded from credentials so just provide an empty
-        # dictionary and log the user and device that were protected.
+        # Provide the username in the credentials for compatibility with
+        # other apps and log the user and device that were protected.
+        User = get_user_model()
+        username = getattr(self.unverified_user, User.USERNAME_FIELD)
         user_login_failed.send(
-            sender=__name__, credentials={}, request=self.request,
-            user=self.unverified_user, device=self.object)
+            sender=__name__, credentials={'username': username},
+            request=self.request, user=self.unverified_user,
+            device=self.object)
         return super().form_invalid(form)
