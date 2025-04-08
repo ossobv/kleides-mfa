@@ -2,6 +2,11 @@
 History
 =======
 
+0.2.4 (2025-04-08)
+------------------
+
+* Move jquery.qrcode.min.js to the path used in the default templates.
+
 
 0.2.3 (2025-01-21)
 ------------------
